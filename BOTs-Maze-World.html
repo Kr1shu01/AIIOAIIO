@@ -1,0 +1,1636 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BOT's Maze World</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1400px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 20px;
+            position: relative;
+            z-index: 1000;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 3rem;
+            color: #4deeea;
+            text-shadow: 0 0 20px rgba(77, 238, 234, 0.6);
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin: 0;
+            flex: 1;
+        }
+        
+        .custom-select {
+            position: relative;
+            display: inline-block;
+            min-width: 180px;
+            z-index: 10000;
+        }
+        
+        .select-selected {
+            background: linear-gradient(135deg, #2196F3, #0d47a1);
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .select-selected:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 25px rgba(0, 0, 0, 0.5);
+        }
+        
+        .select-selected:after {
+            content: "▼";
+            font-size: 16px;
+            margin-left: 15px;
+        }
+        
+        .select-items {
+            position: absolute;
+            background: linear-gradient(145deg, #0a0f25, #0c1430);
+            top: 100%;
+            left: 0;
+            right: 0;
+            z-index: 10000;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(100, 200, 255, 0.3);
+            margin-top: 10px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+        
+        .select-items.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+        
+        .select-items div {
+            padding: 18px 25px;
+            color: #7fdbca;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(100, 200, 255, 0.1);
+        }
+        
+        .select-items div:last-child {
+            border-bottom: none;
+        }
+        
+        .select-items div:hover {
+            background: rgba(77, 238, 234, 0.2);
+            color: #4deeea;
+        }
+        
+        .select-items div.selected {
+            background: rgba(33, 150, 243, 0.3);
+            color: #4deeea;
+        }
+        
+        .container {
+            max-width: 1400px;
+            width: 100%;
+            background: rgba(10, 15, 30, 0.9);
+            border-radius: 25px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+            margin-top: 25px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(100, 150, 255, 0.2);
+            position: relative;
+            z-index: 2;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+            margin: 30px 0;
+        }
+        
+        .stat-card {
+            background: linear-gradient(145deg, #0a0f25, #0c1430);
+            border-radius: 20px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(100, 200, 255, 0.15);
+            transition: transform 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .stat-label {
+            font-size: 1.2rem;
+            color: #7fdbca;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #4deeea;
+            text-shadow: 0 0 10px rgba(77, 238, 234, 0.5);
+        }
+        
+        .main-content {
+            display: flex;
+            gap: 30px;
+            margin: 35px 0;
+            align-items: flex-start;
+            position: relative;
+        }
+        
+        .maze-section {
+            flex: 1;
+            display: flex;
+            gap: 30px;
+            position: relative;
+        }
+        
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            width: 280px;
+            position: relative;
+            z-index: 3;
+        }
+        
+        .goal-section, .operation-section {
+            background: rgba(15, 25, 50, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .section-title {
+            color: #4deeea;
+            font-size: 1.4rem;
+            margin-bottom: 15px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(77, 238, 234, 0.5);
+        }
+        
+        .section-content ul {
+            padding-left: 20px;
+        }
+        
+        .section-content li {
+            margin-bottom: 10px;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+        
+        .highlight {
+            color: #4deeea;
+            font-weight: 500;
+        }
+        
+        .maze-container {
+            background: rgba(15, 25, 50, 0.8);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(100, 200, 255, 0.15);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            position: relative;
+            z-index: 3;
+        }
+        
+        .maze-grid {
+            display: grid;
+            gap: 3px;
+            width: fit-content;
+            margin: 0 auto;
+        }
+        
+        .cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            position: relative;
+            background: rgba(30, 40, 70, 0.7);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(100, 150, 255, 0.1);
+            font-size: 22px;
+        }
+        
+        /* 不同难度的格子大小 */
+        .cell.easy {
+            width: 50px;
+            height: 50px;
+            font-size: 26px;
+        }
+        
+        .cell.medium {
+            width: 40px;
+            height: 40px;
+            font-size: 22px;
+        }
+        
+        .cell.hard {
+            width: 30px;
+            height: 30px;
+            font-size: 18px;
+        }
+        
+        .cell.start {
+            background: linear-gradient(135deg, #4a9bff, #1a73e8);
+            box-shadow: 0 0 25px rgba(74, 155, 255, 0.8);
+            border: 2px solid rgba(160, 200, 255, 0.9);
+            transform: scale(1.05);
+        }
+        
+        .cell.treasure {
+            background: linear-gradient(135deg, #ffd700, #ff9800);
+            color: #000;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.9);
+            border: 2px solid #ffecb3;
+            animation: treasureGlow 2s infinite alternate;
+            transform: scale(1.1);
+        }
+        
+        @keyframes treasureGlow {
+            from { box-shadow: 0 0 25px rgba(255, 215, 0, 0.9); }
+            to { box-shadow: 0 0 40px rgba(255, 215, 0, 1); }
+        }
+        
+        .cell.trap {
+            background: linear-gradient(135deg, #ff5722, #d84315);
+            box-shadow: 0 0 25px rgba(255, 87, 34, 0.7);
+            border: 2px solid #ffab91;
+            animation: trapPulse 1.8s infinite;
+        }
+        
+        @keyframes trapPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+            100% { transform: scale(1); }
+        }
+        
+        .cell.wall {
+            background: linear-gradient(135deg, #78909c, #546e7a);
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.6);
+            border: 2px solid #b0bec5;
+        }
+        
+        .cell.coin {
+            background: linear-gradient(135deg, #ff6bcb, #d500f9);
+            box-shadow: 0 0 20px rgba(255, 107, 203, 0.7);
+            border: 2px solid #ff80cb;
+            animation: coinSpin 3s infinite linear;
+            transform: scale(0.9);
+        }
+        
+        @keyframes coinSpin {
+            from { transform: rotate(0deg) scale(0.9); }
+            to { transform: rotate(360deg) scale(0.9); }
+        }
+        
+        .robot {
+            width: 85%;
+            height: 85%;
+            background: linear-gradient(135deg, #4caf50, #2e7d32);
+            border-radius: 50%;
+            position: absolute;
+            box-shadow: 0 0 30px #4caf50;
+            z-index: 10;
+            animation: robotPulse 1.5s infinite;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-weight: bold;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+        }
+        
+        .robot::before {
+            content: "🤖";
+        }
+        
+        @keyframes robotPulse {
+            0% { transform: scale(1); box-shadow: 0 0 25px #4caf50; }
+            50% { transform: scale(1.15); box-shadow: 0 0 35px #4caf50; }
+            100% { transform: scale(1); box-shadow: 0 0 25px #4caf50; }
+        }
+        
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            width: 220px;
+            position: relative;
+            z-index: 3;
+        }
+        
+        .legend-items {
+            background: rgba(15, 25, 50, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .legend-content {
+            max-height: 200px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        /* 右侧滑动条样式 - 蓝色主题 */
+        .legend-content::-webkit-scrollbar {
+            width: 12px;
+        }
+        
+        .legend-content::-webkit-scrollbar-track {
+            background: rgba(15, 25, 50, 0.8);
+            border-radius: 10px;
+        }
+        
+        .legend-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #2196F3, #0d47a1);
+            border-radius: 10px;
+            border: 2px solid rgba(15, 25, 50, 0.8);
+        }
+        
+        .legend-content::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #4deeea, #00c9ff);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+        }
+        
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .legend-color {
+            width: 25px;
+            height: 25px;
+            border-radius: 6px;
+        }
+        
+        .controls {
+            background: rgba(15, 25, 50, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 15px 20px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 100%;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+        }
+        
+        .btn:active {
+            transform: translateY(1px);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #2196F3, #0d47a1);
+            color: white;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #00c853, #007e33);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ff9800, #e65100);
+            color: white;
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #9c27b0, #4a148c);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336, #b71c1c);
+            color: white;
+        }
+        
+        .btn-disabled {
+            background: linear-gradient(135deg, #9e9e9e, #616161);
+            color: #bdbdbd;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .btn-disabled:hover {
+            transform: none;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.4);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            padding: 20px 30px;
+            background: linear-gradient(135deg, #00c9ff, #00838f);
+            color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            transform: translateX(200%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10000;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        /* Q值表样式 */
+        .q-table-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 10, 25, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            backdrop-filter: blur(5px);
+        }
+        
+        .q-table-container {
+            background: rgba(10, 15, 30, 0.98);
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 1100px;
+            width: 95%;
+            max-height: 90vh;
+            overflow: hidden;
+            border: 2px solid rgba(100, 200, 255, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+            position: relative;
+        }
+        
+        .q-table-header {
+            text-align: center;
+            color: #4deeea;
+            margin-bottom: 25px;
+            font-size: 2rem;
+            text-shadow: 0 0 10px rgba(77, 238, 234, 0.6);
+        }
+        
+        .q-table-wrapper {
+            max-height: 70vh;
+            overflow-y: auto;
+            border-radius: 15px;
+            border: 1px solid rgba(100, 200, 255, 0.2);
+        }
+        
+        /* Q值表滑动条样式 - 蓝色主题 */
+        .q-table-wrapper::-webkit-scrollbar,
+        .legend-content::-webkit-scrollbar {
+            width: 12px;
+        }
+        
+        .q-table-wrapper::-webkit-scrollbar-track,
+        .legend-content::-webkit-scrollbar-track {
+            background: rgba(15, 25, 50, 0.8);
+            border-radius: 10px;
+        }
+        
+        .q-table-wrapper::-webkit-scrollbar-thumb,
+        .legend-content::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #2196F3, #0d47a1);
+            border-radius: 10px;
+            border: 2px solid rgba(15, 25, 50, 0.8);
+        }
+        
+        .q-table-wrapper::-webkit-scrollbar-thumb:hover,
+        .legend-content::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #4deeea, #00c9ff);
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+            font-size: 1.1rem;
+        }
+        
+        th {
+            padding: 15px;
+            border: 2px solid rgba(100, 200, 255, 0.3);
+            color: #4deeea;
+            background: rgba(10, 20, 40, 0.9);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        td {
+            padding: 12px;
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            text-align: center;
+        }
+        
+        /* Q值表右上角关闭按钮 */
+        .q-table-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #f44336, #b71c1c);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            z-index: 10001;
+        }
+        
+        .q-table-close:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .maze-section {
+                flex-direction: column;
+            }
+            
+            .left-panel, .right-panel {
+                width: 100%;
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+            
+            .goal-section, .operation-section,
+            .legend-items, .controls {
+                flex: 1;
+                min-width: 300px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .btn {
+                padding: 12px 15px;
+                font-size: 1rem;
+            }
+            
+            .header {
+                flex-direction: column;
+                gap: 20px;
+            }
+            
+            .custom-select {
+                min-width: 160px;
+            }
+            
+            .left-panel, .right-panel {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="custom-select">
+            <div class="select-selected">简单</div>
+            <div class="select-items">
+                <div class="selected" data-value="easy">简单</div>
+                <div data-value="medium">中等</div>
+                <div data-value="hard">困难</div>
+            </div>
+        </div>
+        
+        <h1>BOT's Maze World</h1>
+        
+        <div class="custom-select">
+            <div class="select-selected">Q-Learning</div>
+            <div class="select-items">
+                <div class="selected" data-value="qlearning">Q-Learning</div>
+                <div data-value="sarsa">SARSA</div>
+                <div data-value="expectedsarsa">Expected SARSA</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="dashboard">
+            <div class="stat-card">
+                <div class="stat-label">训练回合</div>
+                <div class="stat-value" id="episodeCount">0</div>
+                <div style="color: #7fdbca; font-size: 1.1rem;" id="maxEpisodes">/ 150</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">当前步数</div>
+                <div class="stat-value" id="stepCount">0</div>
+                <div style="color: #7fdbca; font-size: 1.1rem;" id="maxSteps">/ 500</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">上一回合奖励</div>
+                <div class="stat-value" id="lastReward">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">所用时长</div>
+                <div class="stat-value" id="timeElapsed">00:00:00</div>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <!-- 迷宫和右侧面板 -->
+            <div class="maze-section">
+                <!-- 左侧说明面板 -->
+                <div class="left-panel">
+                    <div class="goal-section">
+                        <h3 class="section-title">游戏目标</h3>
+                        <div class="section-content">
+                            <ul>
+                                <li>机器人从<span class="highlight">起点🏠</span>出发</li>
+                                <li>避开<span class="highlight">火焰🔥</span>和<span class="highlight">墙壁🛡️</span></li>
+                                <li>收集<span class="highlight">金币💵</span>获得奖励</li>
+                                <li>最终到达<span class="highlight">宝藏💰</span>完成任务</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="operation-section">
+                        <h3 class="section-title">操作说明</h3>
+                        <div class="section-content">
+                            <ul>
+                                <li><span class="highlight">开始训练</span>：自动学习路径</li>
+                                <li><span class="highlight">新地图</span>：生成新的迷宫</li>
+                                <li><span class="highlight">查看Q值</span>：查看学习状态</li>
+                                <li><span class="highlight">部署策略</span>：展示最优路径</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 迷宫容器 -->
+                <div class="maze-container">
+                    <div class="maze-grid" id="environmentGrid"></div>
+                </div>
+                
+                <!-- 右侧浮动面板 - 图例和按钮 -->
+                <div class="right-panel">
+                    <!-- 图例 -->
+                    <div class="legend-items">
+                        <h3 class="section-title">图例</h3>
+                        <div class="legend-content">
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: linear-gradient(135deg, #4a9bff, #1a73e8);"></div>
+                                <span>起点 🏠</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: linear-gradient(135deg, #ffd700, #ff9800);"></div>
+                                <span>宝藏 💰</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: linear-gradient(135deg, #ff5722, #d84315);"></div>
+                                <span>火焰 🔥</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: linear-gradient(135deg, #78909c, #546e7a);"></div>
+                                <span>墙壁 🛡️</span>
+                            </div>
+                            <div class="legend-item">
+                                <div class="legend-color" style="background: linear-gradient(135deg, #ff6bcb, #d500f9);"></div>
+                                <span>金币 💵</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 控制按钮 -->
+                    <div class="controls">
+                        <button class="btn btn-primary" id="startBtn">开始训练</button>
+                        <button class="btn btn-warning" id="resetBtn">新地图</button>
+                        <button class="btn btn-info" id="showQBtn">查看Q值表</button>
+                        <button class="btn btn-disabled" id="deployBtn">部署策略</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification">训练完成!</div>
+
+    <script>
+        // 游戏配置
+        const difficulties = {
+            easy: {
+                gridSize: 9,
+                maxStepsPerEpisode: 500,
+                maxEpisodes: 150,
+                wallCount: 15,
+                trapCount: 8,
+                coinCount: 6,
+                treasureReward: 250,
+                coinReward: 20,
+                cellClass: 'easy'
+            },
+            medium: {
+                gridSize: 13,
+                maxStepsPerEpisode: 1000,
+                maxEpisodes: 200,
+                wallCount: 30,
+                trapCount: 15,
+                coinCount: 10,
+                treasureReward: 250,
+                coinReward: 20,
+                cellClass: 'medium'
+            },
+            hard: {
+                gridSize: 19,
+                maxStepsPerEpisode: 1500,
+                maxEpisodes: 250,
+                wallCount: 60,
+                trapCount: 25,
+                coinCount: 15,
+                treasureReward: 250,
+                coinReward: 20,
+                cellClass: 'hard'
+            }
+        };
+
+        let currentDifficulty = 'easy';
+        let currentMethod = 'qlearning'; // 默认使用Q-Learning
+        const config = {
+            actions: ["↑", "↓", "←", "→"],
+            actionNames: ["up", "down", "left", "right"]
+        };
+
+        // 全局变量
+        let Q = [];
+        let gameState = {
+            currentState: 0,
+            lastReward: 0,
+            episode: 0,
+            isTraining: false,
+            trainingInterval: null,
+            episodeReward: 0,
+            stepCount: 0,
+            lastState: 0,
+            collectedCoins: new Set(),
+            isDeployed: false,
+            deployedPath: [],
+            deployedIndex: 0,
+            deployInterval: null,
+            lastAction: -1, // 用于SARSA
+            stepInEpisode: 0,
+            trainingStartTime: null,
+            elapsedTime: 0,
+            elapsedTimeInterval: null
+        };
+        let maze = {
+            startState: 0,
+            treasureState: 0,
+            trapStates: [],
+            wallStates: [],
+            coinStates: [],
+            gridSize: 9,
+            cellClass: 'easy'
+        };
+
+        // DOM元素
+        const environmentGrid = document.getElementById('environmentGrid');
+        const episodeCount = document.getElementById('episodeCount');
+        const stepCount = document.getElementById('stepCount');
+        const lastRewardEl = document.getElementById('lastReward');
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const showQBtn = document.getElementById('showQBtn');
+        const deployBtn = document.getElementById('deployBtn');
+        const notification = document.getElementById('notification');
+        const maxEpisodesEl = document.getElementById('maxEpisodes');
+        const maxStepsEl = document.getElementById('maxSteps');
+        const timeElapsedEl = document.getElementById('timeElapsed');
+        
+        // 获取所有下拉框元素
+        const selectElements = document.querySelectorAll('.custom-select');
+        const difficultySelect = selectElements[0];
+        const methodSelect = selectElements[1];
+        
+        const difficultySelected = difficultySelect.querySelector('.select-selected');
+        const difficultyItems = difficultySelect.querySelector('.select-items');
+        const difficultyOptions = difficultySelect.querySelectorAll('.select-items div');
+        
+        const methodSelected = methodSelect.querySelector('.select-selected');
+        const methodItems = methodSelect.querySelector('.select-items');
+        const methodOptions = methodSelect.querySelectorAll('.select-items div');
+
+        // 自定义下拉框功能
+        function setupSelect(selectSelected, selectItems, selectOptions, callback) {
+            selectSelected.addEventListener('click', function(e) {
+                e.stopPropagation();
+                // 关闭其他下拉框
+                document.querySelectorAll('.select-items').forEach(item => {
+                    if (item !== selectItems) {
+                        item.classList.remove('show');
+                    }
+                });
+                selectItems.classList.toggle('show');
+            });
+
+            selectOptions.forEach(option => {
+                option.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const value = this.getAttribute('data-value');
+                    const text = this.textContent;
+                    
+                    // 更新选中状态
+                    selectOptions.forEach(opt => opt.classList.remove('selected'));
+                    this.classList.add('selected');
+                    
+                    // 正确更新显示文本 - 只设置纯文本，不添加额外的三角形
+                    selectSelected.textContent = text;
+                    
+                    // 隐藏下拉框
+                    selectItems.classList.remove('show');
+                    
+                    // 执行回调
+                    if (callback) callback(value, text);
+                });
+            });
+        }
+
+        // 设置难度选择
+        setupSelect(difficultySelected, difficultyItems, difficultyOptions, (value, text) => {
+            currentDifficulty = value;
+            resetGame();
+            showNotification(`切换到 ${text} 难度`);
+        });
+
+        // 设置方法选择
+        setupSelect(methodSelected, methodItems, methodOptions, (value, text) => {
+            currentMethod = value;
+            showNotification(`切换到 ${text} 方法`);
+        });
+
+        // 点击其他地方关闭下拉框
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.custom-select')) {
+                document.querySelectorAll('.select-items').forEach(item => {
+                    item.classList.remove('show');
+                });
+            }
+        });
+
+        // 生成随机迷宫
+        function generateMaze() {
+            const diff = difficulties[currentDifficulty];
+            const gridSize = diff.gridSize;
+            const totalCells = gridSize * gridSize;
+            
+            // 固定起点和终点
+            const start = 0;
+            const treasure = totalCells - 1;
+            
+            // 生成陷阱
+            const trapStates = [];
+            const usedPositions = new Set([start, treasure]);
+            
+            for (let i = 0; i < diff.trapCount; i++) {
+                let trapPos;
+                do {
+                    trapPos = Math.floor(Math.random() * totalCells);
+                } while (usedPositions.has(trapPos) || trapPos === start || trapPos === treasure);
+                trapStates.push(trapPos);
+                usedPositions.add(trapPos);
+            }
+            
+            // 生成墙壁
+            const wallStates = [];
+            
+            for (let i = 0; i < diff.wallCount; i++) {
+                let wallPos;
+                do {
+                    wallPos = Math.floor(Math.random() * totalCells);
+                } while (usedPositions.has(wallPos) || wallPos === start || wallPos === treasure);
+                wallStates.push(wallPos);
+                usedPositions.add(wallPos);
+            }
+            
+            // 生成金币
+            const coinStates = [];
+            
+            for (let i = 0; i < diff.coinCount; i++) {
+                let coinPos;
+                do {
+                    coinPos = Math.floor(Math.random() * totalCells);
+                } while (usedPositions.has(coinPos) || coinPos === start || coinPos === treasure);
+                coinStates.push(coinPos);
+                usedPositions.add(coinPos);
+            }
+            
+            return {
+                startState: start,
+                treasureState: treasure,
+                trapStates: trapStates,
+                wallStates: wallStates,
+                coinStates: coinStates,
+                gridSize: gridSize,
+                cellClass: diff.cellClass
+            };
+        }
+
+        // 奖励函数
+        function getReward(state) {
+            const diff = difficulties[currentDifficulty];
+            if (state === maze.treasureState) return diff.treasureReward;  // 大宝藏奖励
+            if (maze.trapStates.includes(state)) return -10;  // 陷阱扣10
+            // 金币奖励 (只奖励一次)
+            if (maze.coinStates.includes(state) && !gameState.collectedCoins.has(state)) {
+                gameState.collectedCoins.add(state);
+                return diff.coinReward;
+            }
+            // 每走一格惩罚1
+            return -1;
+        }
+
+        // 初始化Q表
+        function initializeQTable() {
+            const totalCells = maze.gridSize * maze.gridSize;
+            Q = Array(totalCells).fill().map(() => Array(4).fill(0));
+        }
+
+        // 初始化迷宫和界面
+        function initializeMaze() {
+            // 生成新地图
+            maze = generateMaze();
+            
+            // 初始化Q表
+            initializeQTable();
+            
+            // 清空网格
+            environmentGrid.innerHTML = '';
+            
+            // 设置网格列数和单元格类名
+            environmentGrid.style.gridTemplateColumns = `repeat(${maze.gridSize}, ${getCellSize()})`;
+            
+            // 更新最大值显示
+            const diff = difficulties[currentDifficulty];
+            maxEpisodesEl.textContent = `/ ${diff.maxEpisodes}`;
+            maxStepsEl.textContent = `/ ${diff.maxStepsPerEpisode}`;
+            
+            // 创建网格
+            const totalCells = maze.gridSize * maze.gridSize;
+            for (let i = 0; i < totalCells; i++) {
+                // 环境网格
+                const envCell = document.createElement('div');
+                envCell.className = `cell ${maze.cellClass}`;
+                envCell.dataset.state = i;
+                
+                if (i === maze.startState) {
+                    envCell.classList.add('start');
+                    envCell.innerHTML = '<span>🏠</span>';
+                } else if (i === maze.treasureState) {
+                    envCell.classList.add('treasure');
+                    envCell.innerHTML = '<span>💰</span>';
+                } else if (maze.trapStates.includes(i)) {
+                    envCell.classList.add('trap');
+                    envCell.innerHTML = '<span>🔥</span>';
+                } else if (maze.wallStates.includes(i)) {
+                    envCell.classList.add('wall');
+                    envCell.innerHTML = '<span>🛡️</span>';
+                } else if (maze.coinStates.includes(i)) {
+                    envCell.classList.add('coin');
+                    envCell.innerHTML = '<span>💵</span>';
+                }
+                
+                environmentGrid.appendChild(envCell);
+            }
+            
+            // 添加智能体
+            updateAgentPosition(maze.startState);
+        }
+
+        // 获取当前难度对应的格子大小
+        function getCellSize() {
+            const diff = difficulties[currentDifficulty];
+            if (diff.cellClass === 'easy') return '50px';
+            if (diff.cellClass === 'medium') return '40px';
+            if (diff.cellClass === 'hard') return '30px';
+            return '50px';
+        }
+
+        // 更新智能体位置
+        function updateAgentPosition(state) {
+            // 移除之前的智能体
+            const prevAgents = document.querySelectorAll('.robot');
+            prevAgents.forEach(agent => agent.remove());
+            
+            // 添加新的智能体
+            const cell = environmentGrid.children[state];
+            if (cell) {
+                const robot = document.createElement('div');
+                robot.className = 'robot';
+                cell.appendChild(robot);
+            }
+            
+            // 更新状态显示
+            gameState.lastState = gameState.currentState;
+            gameState.currentState = state;
+            stepCount.textContent = gameState.stepCount;
+            
+            // 如果到达金币位置，移除金币显示
+            if (maze.coinStates.includes(state) && gameState.collectedCoins.has(state)) {
+                const coinCell = environmentGrid.children[state];
+                if (coinCell && coinCell.classList.contains('coin')) {
+                    coinCell.classList.remove('coin');
+                    coinCell.innerHTML = '';
+                }
+            }
+        }
+
+        // 状态转移函数
+        function step(state, actionIndex) {
+            if (state === maze.treasureState) {
+                return { nextState: state, reward: 0, done: true };
+            }
+            
+            const action = config.actionNames[actionIndex];
+            let nextState = state;
+            const gridSize = maze.gridSize;
+            const row = Math.floor(state / gridSize);
+            const col = state % gridSize;
+            
+            switch (action) {
+                case "up":
+                    if (row > 0) nextState = state - gridSize;
+                    break;
+                case "down":
+                    if (row < gridSize - 1) nextState = state + gridSize;
+                    break;
+                case "left":
+                    if (col > 0) nextState = state - 1;
+                    break;
+                case "right":
+                    if (col < gridSize - 1) nextState = state + 1;
+                    break;
+            }
+            
+            // 检查墙壁
+            if (maze.wallStates.includes(nextState)) {
+                nextState = state; // 撞墙不移动
+            }
+            
+            const done = (nextState === maze.treasureState);
+            return { nextState, reward: getReward(nextState), done };
+        }
+
+        // ε-贪婪策略
+        function epsilonGreedy(state, epsilon = 0.15) {
+            if (Math.random() < epsilon) {
+                return Math.floor(Math.random() * 4);
+            }
+            return Q[state].indexOf(Math.max(...Q[state]));
+        }
+
+        // 计算期望Q值 (用于Expected SARSA)
+        function calculateExpectedQ(state, epsilon = 0.15) {
+            const qValues = Q[state];
+            const bestAction = qValues.indexOf(Math.max(...qValues));
+            const expectedQ = new Array(4).fill(0);
+            
+            for (let a = 0; a < 4; a++) {
+                if (a === bestAction) {
+                    expectedQ[a] = (1 - epsilon + epsilon / 4) * qValues[a];
+                } else {
+                    expectedQ[a] = (epsilon / 4) * qValues[a];
+                }
+            }
+            
+            return expectedQ.reduce((sum, val) => sum + val, 0);
+        }
+
+        // 贪婪策略（用于部署）
+        function greedyPolicy(state) {
+            return Q[state].indexOf(Math.max(...Q[state]));
+        }
+
+        // 更新Q值 (Q-Learning)
+        function updateQValueQLearning(state, action, reward, nextState) {
+            const alpha = 0.2;
+            const gamma = 0.95;
+            const maxNextQ = Math.max(...Q[nextState]);
+            Q[state][action] += alpha * (reward + gamma * maxNextQ - Q[state][action]);
+        }
+
+        // 更新Q值 (SARSA)
+        function updateQValueSARSA(state, action, reward, nextState, nextAction) {
+            const alpha = 0.2;
+            const gamma = 0.95;
+            const nextQ = Q[nextState][nextAction];
+            Q[state][action] += alpha * (reward + gamma * nextQ - Q[state][action]);
+        }
+
+        // 更新Q值 (Expected SARSA)
+        function updateQValueExpectedSARSA(state, action, reward, nextState) {
+            const alpha = 0.2;
+            const gamma = 0.95;
+            const expectedNextQ = calculateExpectedQ(nextState);
+            Q[state][action] += alpha * (reward + gamma * expectedNextQ - Q[state][action]);
+        }
+
+        // 格式化时间显示为 00:00:00 (分:秒:毫秒)
+        function formatTime(seconds) {
+            const totalMilliseconds = Math.floor(seconds * 1000);
+            const minutes = Math.floor(totalMilliseconds / 60000);
+            const remainingSeconds = Math.floor((totalMilliseconds % 60000) / 1000);
+            const milliseconds = Math.floor((totalMilliseconds % 1000) / 10);
+            
+            return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}:${milliseconds.toString().padStart(2, '0')}`;
+        }
+
+        // 更新所用时长显示
+        function updateElapsedTime() {
+            if (gameState.trainingStartTime) {
+                const currentTime = new Date();
+                const elapsed = (currentTime - gameState.trainingStartTime) / 1000; // 转换为秒
+                gameState.elapsedTime = elapsed;
+                timeElapsedEl.textContent = formatTime(elapsed);
+            }
+        }
+
+        // 自动训练函数
+        function autoTrain() {
+            // 增加步数计数
+            gameState.stepCount++;
+            gameState.stepInEpisode++;
+            stepCount.textContent = gameState.stepCount;
+            
+            const diff = difficulties[currentDifficulty];
+            
+            // 如果到达终点或超过最大步数，结束本轮
+            if (gameState.currentState === maze.treasureState || gameState.stepInEpisode >= diff.maxStepsPerEpisode) {
+                // 记录上一回合奖励
+                gameState.lastReward = gameState.episodeReward;
+                lastRewardEl.textContent = gameState.episodeReward;
+                
+                // 重置回合奖励
+                gameState.episodeReward = 0;
+                
+                // 增加回合数
+                gameState.episode++;
+                updateEpisodeDisplay();
+                
+                // 重置步数和已收集金币
+                gameState.stepCount = 0;
+                gameState.stepInEpisode = 0;
+                stepCount.textContent = '0';
+                gameState.collectedCoins.clear();
+                
+                // 重置SARSA的上一个动作
+                gameState.lastAction = -1;
+                
+                // 检查是否完成训练
+                if (gameState.episode >= diff.maxEpisodes) {
+                    stopTraining();
+                    showNotification("训练完成!");
+                    deployBtn.classList.remove('btn-disabled');
+                    deployBtn.classList.add('btn-success');
+                    return;
+                }
+                
+                // 重置到起点并重新显示所有金币（不重新生成地图）
+                gameState.currentState = maze.startState;
+                gameState.lastState = maze.startState;
+                resetMazeForNewEpisode(); // 重置迷宫显示但保持地图不变
+                updateAgentPosition(maze.startState);
+                return;
+            }
+            
+            // 根据选择的方法执行不同的训练逻辑
+            if (currentMethod === 'qlearning') {
+                // Q-Learning逻辑
+                const action = epsilonGreedy(gameState.currentState);
+                const { nextState, reward, done } = step(gameState.currentState, action);
+                updateQValueQLearning(gameState.currentState, action, reward, nextState);
+                gameState.episodeReward += reward;
+                updateAgentPosition(nextState);
+            } else if (currentMethod === 'sarsa') {
+                // SARSA逻辑
+                let action;
+                if (gameState.lastAction === -1) {
+                    // 第一步随机选择动作
+                    action = epsilonGreedy(gameState.currentState);
+                } else {
+                    // 使用上一步的动作
+                    action = gameState.lastAction;
+                }
+                
+                const { nextState, reward, done } = step(gameState.currentState, action);
+                const nextAction = epsilonGreedy(nextState);
+                updateQValueSARSA(gameState.currentState, action, reward, nextState, nextAction);
+                gameState.episodeReward += reward;
+                gameState.lastAction = nextAction;
+                updateAgentPosition(nextState);
+            } else {
+                // Expected SARSA逻辑
+                const action = epsilonGreedy(gameState.currentState);
+                const { nextState, reward, done } = step(gameState.currentState, action);
+                updateQValueExpectedSARSA(gameState.currentState, action, reward, nextState);
+                gameState.episodeReward += reward;
+                updateAgentPosition(nextState);
+            }
+        }
+
+        // 为新回合重置迷宫显示（保持地图不变，重置金币显示）
+        function resetMazeForNewEpisode() {
+            // 清空网格
+            environmentGrid.innerHTML = '';
+            
+            // 重新创建网格，恢复所有金币显示
+            const totalCells = maze.gridSize * maze.gridSize;
+            for (let i = 0; i < totalCells; i++) {
+                const envCell = document.createElement('div');
+                envCell.className = `cell ${maze.cellClass}`;
+                envCell.dataset.state = i;
+                
+                if (i === maze.startState) {
+                    envCell.classList.add('start');
+                    envCell.innerHTML = '<span>🏠</span>';
+                } else if (i === maze.treasureState) {
+                    envCell.classList.add('treasure');
+                    envCell.innerHTML = '<span>💰</span>';
+                } else if (maze.trapStates.includes(i)) {
+                    envCell.classList.add('trap');
+                    envCell.innerHTML = '<span>🔥</span>';
+                } else if (maze.wallStates.includes(i)) {
+                    envCell.classList.add('wall');
+                    envCell.innerHTML = '<span>🛡️</span>';
+                } else if (maze.coinStates.includes(i)) {
+                    envCell.classList.add('coin');
+                    envCell.innerHTML = '<span>💵</span>';
+                }
+                
+                environmentGrid.appendChild(envCell);
+            }
+            
+            // 添加智能体
+            updateAgentPosition(maze.startState);
+        }
+
+        // 更新回合显示
+        function updateEpisodeDisplay() {
+            episodeCount.textContent = gameState.episode;
+        }
+
+        // 开始训练
+        function startTraining() {
+            if (gameState.isTraining) return;
+            
+            gameState.isTraining = true;
+            startBtn.textContent = '暂停训练';
+            startBtn.classList.remove('btn-primary');
+            startBtn.classList.add('btn-warning');
+            
+            // 记录训练开始时间
+            if (!gameState.trainingStartTime) {
+                gameState.trainingStartTime = new Date();
+            }
+            
+            // 开始定时更新所用时长
+            gameState.elapsedTimeInterval = setInterval(updateElapsedTime, 10);
+            
+            gameState.trainingInterval = setInterval(autoTrain, 30);
+        }
+
+        // 暂停训练
+        function stopTraining() {
+            gameState.isTraining = false;
+            clearInterval(gameState.trainingInterval);
+            clearInterval(gameState.elapsedTimeInterval);
+            startBtn.textContent = '继续训练';
+            startBtn.classList.remove('btn-warning');
+            startBtn.classList.add('btn-primary');
+        }
+
+        // 重置游戏 (生成新地图)
+        function resetGame() {
+            // 停止训练
+            if (gameState.isTraining) {
+                stopTraining();
+            }
+            
+            // 停止部署
+            if (gameState.isDeployed) {
+                clearInterval(gameState.deployInterval);
+                gameState.isDeployed = false;
+            }
+            
+            // 重置游戏状态
+            gameState.currentState = 0;
+            gameState.lastState = 0;
+            gameState.lastReward = 0;
+            gameState.episode = 0;
+            gameState.episodeReward = 0;
+            gameState.stepCount = 0;
+            gameState.stepInEpisode = 0;
+            gameState.collectedCoins.clear();
+            gameState.deployedPath = [];
+            gameState.deployedIndex = 0;
+            gameState.lastAction = -1;
+            gameState.trainingStartTime = null;
+            gameState.elapsedTime = 0;
+            clearInterval(gameState.elapsedTimeInterval);
+            
+            // 更新显示
+            lastRewardEl.textContent = '0';
+            stepCount.textContent = '0';
+            timeElapsedEl.textContent = '00:00:00';
+            updateEpisodeDisplay();
+            
+            // 禁用部署按钮
+            deployBtn.classList.remove('btn-success');
+            deployBtn.classList.add('btn-disabled');
+            
+            // 生成新地图
+            initializeMaze();
+            
+            // 重置按钮文本
+            startBtn.textContent = '开始训练';
+            startBtn.classList.remove('btn-warning');
+            startBtn.classList.add('btn-primary');
+            
+            showNotification("新地图已生成!");
+        }
+
+        // 显示通知
+        function showNotification(message) {
+            notification.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // 显示Q值表
+        function showQTable() {
+            const totalCells = maze.gridSize * maze.gridSize;
+            let qTableHTML = `
+                <div class="q-table-container">
+                    <h2 class="q-table-header">Q值表</h2>
+                    <div class="q-table-wrapper">
+                        <table>
+                            <tr>
+                                <th>状态</th>
+                                <th>↑ 上</th>
+                                <th>↓ 下</th>
+                                <th>← 左</th>
+                                <th>→ 右</th>
+                            </tr>
+            `;
+            
+            for (let i = 0; i < totalCells; i++) {
+                let bgColor, textColor;
+                let qValues = Q[i];
+                
+                if (i === maze.treasureState) {
+                    bgColor = 'linear-gradient(135deg, #ffd700, #ff9800)';
+                    textColor = '#000';
+                } else if (maze.trapStates.includes(i)) {
+                    bgColor = 'linear-gradient(135deg, #ff5722, #d84315)';
+                    textColor = '#000';
+                } else if (maze.wallStates.includes(i)) {
+                    bgColor = 'linear-gradient(135deg, #78909c, #546e7a)';
+                    textColor = '#fff';
+                } else if (maze.coinStates.includes(i)) {
+                    bgColor = 'linear-gradient(135deg, #ff6bcb, #d500f9)';
+                    textColor = '#fff';
+                } else if (i === maze.startState) {
+                    bgColor = 'linear-gradient(135deg, #4a9bff, #1a73e8)';
+                    textColor = '#fff';
+                } else {
+                    bgColor = 'rgba(30, 40, 70, 0.8)';
+                    textColor = '#4deeea';
+                }
+                
+                qTableHTML += `<tr style="background: ${bgColor}; color: ${textColor};">
+                    <td>${i}</td>
+                    <td>${qValues[0].toFixed(2)}</td>
+                    <td>${qValues[1].toFixed(2)}</td>
+                    <td>${qValues[2].toFixed(2)}</td>
+                    <td>${qValues[3].toFixed(2)}</td>
+                </tr>`;
+            }
+            
+            qTableHTML += `</table></div>
+            </div>`;
+            
+            // 创建弹窗显示Q表
+            const popup = document.createElement('div');
+            popup.className = 'q-table-popup';
+            popup.innerHTML = qTableHTML;
+            
+            // 添加右上角关闭按钮（文字形式）
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'q-table-close';
+            closeBtn.innerHTML = '关闭';
+            closeBtn.addEventListener('click', () => {
+                document.body.removeChild(popup);
+            });
+            
+            popup.appendChild(closeBtn);
+            
+            document.body.appendChild(popup);
+        }
+
+        // 获取当前方法名称
+        function getCurrentMethodName() {
+            const methodNames = {
+                'qlearning': 'Q-Learning',
+                'sarsa': 'SARSA',
+                'expectedsarsa': 'Expected SARSA'
+            };
+            return methodNames[currentMethod] || currentMethod;
+        }
+
+        // 部署策略执行函数
+        function deployPolicy() {
+            if (gameState.isDeployed) {
+                // 停止部署
+                clearInterval(gameState.deployInterval);
+                gameState.isDeployed = false;
+                deployBtn.textContent = '部署策略';
+                deployBtn.classList.remove('btn-warning');
+                deployBtn.classList.add('btn-success');
+                showNotification("策略部署已停止");
+                return;
+            }
+            
+            // 重置到起点
+            gameState.currentState = maze.startState;
+            gameState.stepCount = 0;
+            gameState.collectedCoins.clear();
+            resetMazeForNewEpisode();
+            updateAgentPosition(maze.startState);
+            
+            // 开始部署
+            gameState.isDeployed = true;
+            deployBtn.textContent = '停止部署';
+            deployBtn.classList.remove('btn-success');
+            deployBtn.classList.add('btn-warning');
+            showNotification("开始执行最优策略");
+            
+            gameState.deployInterval = setInterval(() => {
+                // 如果到达终点，停止部署
+                if (gameState.currentState === maze.treasureState) {
+                    clearInterval(gameState.deployInterval);
+                    gameState.isDeployed = false;
+                    deployBtn.textContent = '部署策略';
+                    deployBtn.classList.remove('btn-warning');
+                    deployBtn.classList.add('btn-success');
+                    showNotification("策略执行完成!");
+                    return;
+                }
+                
+                // 使用贪婪策略选择动作
+                const action = greedyPolicy(gameState.currentState);
+                
+                // 执行动作
+                const { nextState } = step(gameState.currentState, action);
+                
+                // 更新步数
+                gameState.stepCount++;
+                stepCount.textContent = gameState.stepCount;
+                
+                // 更新位置
+                updateAgentPosition(nextState);
+            }, 200);
+        }
+
+        // 设置事件监听器
+        function setupEventListeners() {
+            startBtn.addEventListener('click', () => {
+                if (gameState.isTraining) {
+                    stopTraining();
+                } else {
+                    startTraining();
+                }
+            });
+            
+            resetBtn.addEventListener('click', resetGame);
+            showQBtn.addEventListener('click', showQTable);
+            deployBtn.addEventListener('click', () => {
+                if (!deployBtn.classList.contains('btn-disabled')) {
+                    deployPolicy();
+                }
+            });
+        }
+
+        // 初始化应用
+        function init() {
+            initializeMaze();
+            setupEventListeners();
+            updateEpisodeDisplay();
+        }
+
+        // 页面加载完成后初始化
+        window.onload = init;
+    </script>
+</body>
+</html>
