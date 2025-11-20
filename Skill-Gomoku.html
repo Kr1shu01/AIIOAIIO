@@ -1071,7 +1071,7 @@
                         
                     case 'qinna':
                         qinnaEffect[1] = true;
-                        showNotification(`<tool_call> AI使用「${aiSkills[randomSkill].desc}」! 你无法使用「飞沙走石」技能!`);
+                        showNotification(`🤜 AI使用「${aiSkills[randomSkill].desc}」! 你无法使用「飞沙走石」技能!`);
                         aiSkills.qinna.used = true;
                         updateSkillsStatus();
                         break;
@@ -1298,7 +1298,7 @@
                     
                 case 'qinna': // 擒拿制敌
                     qinnaEffect[opponent] = true;
-                    showNotification(`<tool_call>「${playerSkills[skillName].desc}」发动! 对手无法使用「飞沙走石」技能!`);
+                    showNotification(`🤜「${playerSkills[skillName].desc}」发动! 对手无法使用「飞沙走石」技能!`);
                     playerSkills.qinna.used = true;
                     updateSkillsStatus();
                     break;
