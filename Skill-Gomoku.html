@@ -1,0 +1,1563 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技能五子棋</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1400px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 20px;
+            position: relative;
+            z-index: 1000;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 3rem;
+            color: #4deeea;
+            text-shadow: 0 0 20px rgba(77, 238, 234, 0.6);
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin: 0;
+            flex: 1;
+        }
+        
+        .game-container {
+            max-width: 1400px;
+            width: 100%;
+            background: rgba(10, 15, 30, 0.9);
+            border-radius: 25px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+            margin-top: 25px;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(100, 150, 255, 0.2);
+            position: relative;
+            z-index: 2;
+        }
+        
+        .main-content {
+            display: flex;
+            gap: 30px;
+            margin: 35px 0;
+            align-items: flex-start;
+            position: relative;
+        }
+        
+        .board-wrapper {
+            position: relative;
+        }
+        
+        .chessboard {
+            width: 620px; /* 增大棋盘 */
+            height: 620px; /* 增大棋盘 */
+            background: rgba(15, 25, 50, 0.8);
+            border: 3px solid rgba(100, 200, 255, 0.3);
+            border-radius: 15px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .cell {
+            position: absolute;
+            width: 30px; /* 增大棋子 */
+            height: 30px; /* 增大棋子 */
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .cell:hover {
+            transform: translate(-50%, -50%) scale(1.1);
+            box-shadow: 0 0 20px rgba(77, 238, 234, 0.8);
+        }
+        
+        .cell.black {
+            background: radial-gradient(circle at 30% 30%, #2c2c2c, #000000);
+            /* 黑色棋子外围发光效果 */
+            outline: 2px solid rgba(77, 238, 234, 0.6);
+            outline-offset: 2px;
+            box-shadow: 0 0 15px rgba(77, 238, 234, 0.7), 
+                        inset -3px -3px 8px rgba(0,0,0,0.5);
+        }
+        
+        .cell.white {
+            background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0);
+            /* 白色棋子外围发光效果 */
+            outline: 2px solid rgba(77, 238, 234, 0.6);
+            outline-offset: 2px;
+            box-shadow: 0 0 15px rgba(77, 238, 234, 0.7), 
+                        inset -3px -3px 8px rgba(255,255,255,0.5);
+        }
+        
+        .grid-line {
+            position: absolute;
+            background: linear-gradient(90deg, #7fdbca, #4deeea, #7fdbca);
+            box-shadow: 0 0 5px rgba(77, 238, 234, 0.6);
+        }
+        
+        .horizontal-line {
+            width: 100%;
+            height: 2px;
+        }
+        
+        .vertical-line {
+            width: 2px;
+            height: 100%;
+        }
+        
+        .coordinate {
+            position: absolute;
+            font-size: 14px; /* 增大坐标字体 */
+            color: #7fdbca;
+            font-weight: bold;
+            text-shadow: 0 0 3px rgba(77, 238, 234, 0.7);
+            user-select: none;
+        }
+        
+        .coordinate-letter {
+            bottom: 5px;
+        }
+        
+        .coordinate-number {
+            left: 5px;
+        }
+        
+        .info-panel {
+            background: rgba(15, 25, 50, 0.8);
+            border-radius: 15px;
+            padding: 20px;
+            min-width: 350px; /* 增大面板 */
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .current-player {
+            font-size: 1.4rem; /* 增大字体 */
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(10, 20, 40, 0.9);
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(77, 238, 234, 0.5);
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            color: #7fdbca;
+        }
+        
+        .current-player.black { 
+            background: linear-gradient(45deg, rgba(0, 0, 0, 0.6), rgba(40, 40, 40, 0.6));
+            color: #4deeea;
+        }
+        .current-player.white { 
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.4), rgba(220, 220, 220, 0.4));
+            color: #0f3460;
+        }
+        
+        .skills-section {
+            margin-bottom: 20px;
+        }
+        
+        .skills-section h3 {
+            margin-bottom: 15px;
+            color: #4deeea;
+            font-size: 1.5rem; /* 增大标题字体 */
+            text-align: center;
+            text-shadow: 0 0 10px rgba(77, 238, 234, 0.5);
+            font-weight: bold;
+        }
+        
+        .skills-container {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .skills-column {
+            flex: 1;
+        }
+        
+        .skill-button {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #2196F3, #0d47a1);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            opacity: 0.7;
+            font-size: 1.1rem; /* 增大技能字体 */
+            box-shadow: 0 4px 10px rgba(33, 150, 243, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .skill-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(77, 238, 234, 0.3), transparent);
+            transition: 0.5s;
+        }
+        
+        .skill-button.available {
+            opacity: 1;
+            box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6);
+            animation: pulse 2s infinite;
+        }
+        
+        .skill-button.available:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(33, 150, 243, 0.8);
+        }
+        
+        .skill-button.available:hover::before {
+            left: 100%;
+        }
+        
+        .skill-button.used {
+            opacity: 0.3;
+            cursor: not-allowed;
+            background: linear-gradient(45deg, #666, #999);
+        }
+        
+        .skill-button.cooldown {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6); }
+            50% { box-shadow: 0 6px 25px rgba(77, 238, 234, 0.9); }
+            100% { box-shadow: 0 6px 20px rgba(33, 150, 243, 0.6); }
+        }
+        
+        .skill-description {
+            font-size: 0.9rem; /* 增大描述字体 */
+            margin-top: 5px;
+            opacity: 0.9;
+        }
+        
+        .controls {
+            margin-top: 20px;
+        }
+        
+        .control-button {
+            width: 100%;
+            padding: 16px;
+            margin: 12px 0;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #00c9ff, #92fe9d);
+            color: #0f3460;
+            font-weight: bold;
+            font-size: 1.2rem; /* 增大按钮字体 */
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(0, 201, 255, 0.4);
+        }
+        
+        .control-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 201, 255, 0.6);
+        }
+        
+        .status-message {
+            margin-top: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            background: rgba(10, 20, 40, 0.9);
+            text-align: center;
+            min-height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem; /* 增大状态字体 */
+            font-weight: bold;
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            color: #7fdbca;
+        }
+        
+        .winner {
+            animation: winnerPulse 1s infinite;
+        }
+        
+        @keyframes winnerPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(5, 10, 25, 0.95);
+        }
+        
+        .modal-content {
+            background: rgba(10, 15, 30, 0.98);
+            margin: 15% auto;
+            padding: 35px;
+            border-radius: 20px;
+            width: 80%;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+            border: 2px solid rgba(100, 200, 255, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .modal-content::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, #4deeea, #7fdbca, #4deeea);
+        }
+        
+        .close {
+            color: #4deeea;
+            float: right;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+            text-shadow: 0 0 5px rgba(77, 238, 234, 0.7);
+        }
+        
+        .notification {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, #00c9ff, #00838f);
+            color: white;
+            padding: 25px 35px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            transform: translateX(200%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 10000;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .move-counter {
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.1rem; /* 增大步数字体 */
+            opacity: 0.9;
+            font-weight: bold;
+            text-shadow: 0 0 3px rgba(77, 238, 234, 0.5);
+            color: #7fdbca;
+        }
+        
+        .frozen {
+            animation: frozenShake 0.5s infinite;
+        }
+        
+        @keyframes frozenShake {
+            0%, 100% { transform: translate(-50%, -50%) rotate(0deg); }
+            25% { transform: translate(-50%, -50%) rotate(2deg); }
+            75% { transform: translate(-50%, -50%) rotate(-2deg); }
+        }
+        
+        /* 什刹海样式 - 更大，波浪在内部移动 */
+        .shacha-hai {
+            position: absolute;
+            width: 140px; /* 增大什刹海 */
+            height: 100px; /* 增大什刹海 */
+            background: linear-gradient(135deg, #1e90ff, #00bfff, #4169e1);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: white;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+            box-shadow: 0 6px 20px rgba(30, 144, 255, 0.8);
+            border: 3px solid #0066cc;
+            z-index: 5;
+            overflow: hidden;
+        }
+        
+        .shacha-hai::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 20px,
+                rgba(255, 255, 255, 0.1) 20px,
+                rgba(255, 255, 255, 0.1) 40px
+            );
+            animation: waveMove 3s linear infinite;
+        }
+        
+        @keyframes waveMove {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        
+        .shacha-hai-text {
+            position: relative;
+            z-index: 2;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 8px 12px;
+            border-radius: 8px;
+        }
+        
+        /* 飞行动画 */
+        .flying-cell {
+            position: absolute;
+            width: 30px; /* 增大飞行棋子 */
+            height: 30px; /* 增大飞行棋子 */
+            border-radius: 50%;
+            z-index: 100;
+            pointer-events: none;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+        }
+        
+        .flying-black {
+            background: radial-gradient(circle at 30% 30%, #2c2c2c, #000000);
+            /* 飞行中的黑色棋子也发光 */
+            outline: 2px solid rgba(77, 238, 234, 0.6);
+            outline-offset: 2px;
+            box-shadow: 0 0 15px rgba(77, 238, 234, 0.7), 
+                        inset -3px -3px 8px rgba(0,0,0,0.5);
+        }
+        
+        .flying-white {
+            background: radial-gradient(circle at 30% 30%, #ffffff, #e0e0e0);
+            /* 飞行中的白色棋子也发光 */
+            outline: 2px solid rgba(77, 238, 234, 0.6);
+            outline-offset: 2px;
+            box-shadow: 0 0 15px rgba(77, 238, 234, 0.7), 
+                        inset -3px -3px 8px rgba(255,255,255,0.5);
+        }
+        
+        @keyframes flyToSea {
+            0% {
+                transform: translate(0, 0) scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: translate(var(--mid-x), var(--mid-y)) scale(1.2);
+                opacity: 0.9;
+            }
+            100% {
+                transform: translate(var(--end-x), var(--end-y)) scale(0.2);
+                opacity: 0;
+            }
+        }
+        
+        .flying-animation {
+            animation: flyToSea 1.8s ease-in-out forwards;
+        }
+        
+        /* 禁用棋盘交互 */
+        .chessboard.disabled {
+            pointer-events: none;
+            opacity: 0.7;
+            filter: grayscale(30%);
+        }
+        
+        .disabled-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 20;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: #4deeea;
+            font-weight: bold;
+            font-size: 28px;
+            text-shadow: 0 0 10px rgba(77, 238, 234, 0.8);
+            backdrop-filter: blur(3px);
+        }
+        
+        .chessboard.disabled .disabled-overlay {
+            display: flex;
+        }
+        
+        /* 发光效果 */
+        .glow-effect {
+            animation: glowEffect 2s infinite alternate;
+        }
+        
+        @keyframes glowEffect {
+            from { box-shadow: 0 0 10px #4deeea; }
+            to { box-shadow: 0 0 25px #7fdbca, 0 0 35px #4deeea; }
+        }
+        
+        @media (max-width: 1200px) {
+            .main-content {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .chessboard {
+                width: 100%;
+                max-width: 550px;
+                height: auto;
+                aspect-ratio: 1/1;
+            }
+            
+            .info-panel {
+                width: 100%;
+                max-width: 550px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>技能五子棋</h1>
+    </div>
+    
+    <div class="game-container">
+        <div class="main-content">
+            <div class="board-wrapper">
+                <div class="chessboard" id="chessboard">
+                    <div class="disabled-overlay">技能阶段中...</div>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <div class="current-player" id="currentPlayer">
+                    当前回合: ⚫ 黑方 (玩家)
+                </div>
+                
+                <div class="move-counter" id="moveCounter">
+                    黑方步数: 0 | 白方步数: 0
+                </div>
+                
+                <div class="skills-section">
+                    <h3>⚡ 独门绝技</h3>
+                    <div class="skills-container">
+                        <div class="skills-column">
+                            <button class="skill-button cooldown" id="feisha" onclick="useSkill('feisha')">
+                                🌪️ 飞沙走石
+                                <div class="skill-description">随机移除对手一个棋子到什刹海</div>
+                            </button>
+                            <button class="skill-button cooldown" id="liba" onclick="useSkill('liba')">
+                                🏋️‍♂️ 力拔山兮
+                                <div class="skill-description">愤怒地掀翻棋盘直接获胜</div>
+                            </button>
+                            <button class="skill-button cooldown" id="qinna" onclick="useSkill('qinna')">
+                                🤜 擒拿制敌
+                                <div class="skill-description">禁止对手使用「飞沙走石」技能</div>
+                            </button>
+                            <button class="skill-button cooldown" id="dongshan" onclick="useSkill('dongshan')">
+                                🌟 东山再起
+                                <div class="skill-description">恢复棋盘</div>
+                            </button>
+                        </div>
+                        <div class="skills-column">
+                            <button class="skill-button cooldown" id="jingru" onclick="useSkill('jingru')">
+                                💧 静如止水
+                                <div class="skill-description">冻结对方一回合</div>
+                            </button>
+                            <button class="skill-button cooldown" id="diaoli" onclick="useSkill('diaoli')">
+                                🌀 调离山头
+                                <div class="skill-description">随机移动对方棋子</div>
+                            </button>
+                            <button class="skill-button cooldown" id="baojie" onclick="useSkill('baojie')">
+                                🧹 保洁上门
+                                <div class="skill-description">清除对方所有棋子</div>
+                            </button>
+                            <button class="skill-button cooldown" id="fanZhuan" onclick="useSkill('fanZhuan')">
+                                🔁 两极反转
+                                <div class="skill-description">交换双方棋子颜色</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="controls">
+                    <button class="control-button" onclick="startNewGame()">
+                        🔄 重新开始
+                    </button>
+                </div>
+                
+                <div class="status-message" id="statusMessage">
+                    做好准备，展现你的棋艺吧!
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 胜利弹窗 -->
+    <div id="winnerModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2 id="winnerTitle">🌟 获胜!</h2>
+            <p id="winnerMessage"></p>
+            <button class="control-button" onclick="startNewGame()" style="margin-top: 20px;">
+                再来一局
+            </button>
+        </div>
+    </div>
+    
+    <!-- 技能通知 -->
+    <div class="notification" id="notification">
+        使用技能成功!
+    </div>
+    
+    <script>
+        // 游戏状态
+        const BOARD_SIZE = 15;
+        let board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
+        let currentPlayer = 1; // 1为黑棋(player), 2为白棋(AI)
+        let gameActive = true;
+        let moveCount = { 1: 0, 2: 0 }; // 记录双方步数
+        let playerSkills = {
+            feisha: { used: false, desc: "飞沙走石" },
+            liba: { used: false, desc: "力拔山兮" }, 
+            qinna: { used: false, desc: "擒拿制敌" },
+            dongshan: { used: false, desc: "东山再起" },
+            jingru: { used: false, desc: "静如止水" },
+            diaoli: { used: false, desc: "调离山头" },
+            baojie: { used: false, desc: "保洁上门" },
+            fanZhuan: { used: false, desc: "两极反转" }
+        };
+        let aiSkills = {
+            feisha: { used: false, desc: "飞沙走石" },
+            liba: { used: false, desc: "力拔山兮" }, 
+            qinna: { used: false, desc: "擒拿制敌" },
+            dongshan: { used: false, desc: "东山再起" },
+            jingru: { used: false, desc: "静如止水" },
+            diaoli: { used: false, desc: "调离山头" },
+            baojie: { used: false, desc: "保洁上门" },
+            fanZhuan: { used: false, desc: "两极反转" }
+        };
+        let qinnaEffect = { 1: false, 2: false }; // 擒拿技能效果，谁被克制
+        let frozenPlayer = 0; // 被冻结的玩家，0表示无冻结
+        let playerCanUseSkill = false; // 标记玩家是否可以使用技能
+        let aiCanUseSkill = false; // 标记AI是否可以使用技能
+        let skillTurnPhase = 0; // 0:正常下棋阶段, 1:技能释放阶段, 2:AI技能等待阶段
+        let nextPlayerAfterSkills = 1; // 技能释放完成后下一个玩家
+        let shachaHaiElement = null; // 什刹海元素
+        let lastRemovedCellColor = null; // 记录最后一次被移除的棋子颜色
+        
+        // DOM元素
+        const chessboard = document.getElementById('chessboard');
+        const currentPlayerElement = document.getElementById('currentPlayer');
+        const statusMessage = document.getElementById('statusMessage');
+        const winnerModal = document.getElementById('winnerModal');
+        const notification = document.getElementById('notification');
+        const moveCounterElement = document.getElementById('moveCounter');
+        
+        // 初始化棋盘
+        function initializeBoard() {
+            chessboard.innerHTML = '<div class="disabled-overlay">技能阶段中...</div>';
+            
+            // 绘制网格线和坐标
+            const cellSize = 39; // 调整格子大小以适应更大的棋盘
+            const offsetX = 30;
+            const offsetY = 30;
+            
+            // 绘制网格线
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                // 水平线
+                const hLine = document.createElement('div');
+                hLine.className = 'grid-line horizontal-line';
+                hLine.style.top = (i * cellSize + offsetY) + 'px';
+                hLine.style.left = offsetX + 'px';
+                hLine.style.width = (cellSize * (BOARD_SIZE - 1)) + 'px';
+                chessboard.appendChild(hLine);
+                
+                // 垂直线
+                const vLine = document.createElement('div');
+                vLine.className = 'grid-line vertical-line';
+                vLine.style.left = (i * cellSize + offsetX) + 'px';
+                vLine.style.top = offsetY + 'px';
+                vLine.style.height = (cellSize * (BOARD_SIZE - 1)) + 'px';
+                chessboard.appendChild(vLine);
+                
+                // 数字坐标（左侧）
+                if (i < BOARD_SIZE) {
+                    const numberCoord = document.createElement('div');
+                    numberCoord.className = 'coordinate coordinate-number';
+                    numberCoord.textContent = BOARD_SIZE - i;
+                    numberCoord.style.left = '10px';
+                    numberCoord.style.top = (i * cellSize + offsetY - 10) + 'px';
+                    chessboard.appendChild(numberCoord);
+                }
+                
+                // 字母坐标（底部）
+                if (i < BOARD_SIZE) {
+                    const letterCoord = document.createElement('div');
+                    letterCoord.className = 'coordinate coordinate-letter';
+                    letterCoord.textContent = String.fromCharCode(65 + i);
+                    letterCoord.style.left = (i * cellSize + offsetX - 8) + 'px';
+                    letterCoord.style.bottom = '10px';
+                    chessboard.appendChild(letterCoord);
+                }
+                
+                // 创建交叉点（仅用于点击检测）
+                for (let j = 0; j < BOARD_SIZE; j++) {
+                    const point = document.createElement('div');
+                    point.className = 'point';
+                    point.style.position = 'absolute';
+                    point.style.width = '26px';
+                    point.style.height = '26px';
+                    point.style.left = (j * cellSize + offsetX) + 'px';
+                    point.style.top = (i * cellSize + offsetY) + 'px';
+                    point.style.transform = 'translate(-50%, -50%)';
+                    point.style.cursor = 'pointer';
+                    point.dataset.row = i;
+                    point.dataset.col = j;
+                    point.addEventListener('click', () => makeMove(i, j));
+                    chessboard.appendChild(point);
+                }
+            }
+            
+            // 添加什刹海区域（棋盘外的左下角）
+            createShachaHai();
+        }
+        
+        // 创建什刹海（棋盘外左下角，更大）
+        function createShachaHai() {
+            if (shachaHaiElement) {
+                shachaHaiElement.remove();
+            }
+            
+            // 获取棋盘容器的位置信息
+            const boardWrapper = document.querySelector('.board-wrapper');
+            
+            shachaHaiElement = document.createElement('div');
+            shachaHaiElement.className = 'shacha-hai';
+            shachaHaiElement.style.left = '-150px';
+            shachaHaiElement.style.bottom = '-25px';
+            shachaHaiElement.style.position = 'absolute';
+            
+            // 添加文字
+            const text = document.createElement('div');
+            text.className = 'shacha-hai-text';
+            text.textContent = '什刹海';
+            shachaHaiElement.appendChild(text);
+            
+            boardWrapper.appendChild(shachaHaiElement);
+        }
+        
+        // 更新棋盘显示
+        function updateBoardDisplay() {
+            // 移除旧的棋子
+            const oldCells = document.querySelectorAll('.cell:not(.flying-cell)');
+            oldCells.forEach(cell => cell.remove());
+            
+            // 添加新的棋子
+            const cellSize = 39;
+            const offsetX = 30;
+            const offsetY = 30;
+            
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                for (let j = 0; j < BOARD_SIZE; j++) {
+                    if (board[i][j] !== 0) {
+                        const cell = document.createElement('div');
+                        cell.className = `cell ${board[i][j] === 1 ? 'black' : 'white'}`;
+                        if (frozenPlayer === board[i][j]) {
+                            cell.classList.add('frozen');
+                        }
+                        cell.style.left = (j * cellSize + offsetX) + 'px';
+                        cell.style.top = (i * cellSize + offsetY) + 'px';
+                        cell.dataset.row = i;
+                        cell.dataset.col = j;
+                        chessboard.appendChild(cell);
+                    }
+                }
+            }
+        }
+        
+        // 禁用/启用棋盘
+        function toggleBoardDisable(disable) {
+            if (disable) {
+                chessboard.classList.add('disabled');
+            } else {
+                chessboard.classList.remove('disabled');
+            }
+        }
+        
+        // 下棋
+        function makeMove(row, col) {
+            if (!gameActive || board[row][col] !== 0 || skillTurnPhase !== 0) return;
+            
+            // 检查是否被冻结
+            if (frozenPlayer === currentPlayer) {
+                showNotification("你被「静如止水」冻结，跳过回合!");
+                frozenPlayer = 0;
+                currentPlayer = currentPlayer === 1 ? 2 : 1;
+                updateCurrentPlayer();
+                if (currentPlayer === 2 && gameActive) {
+                    setTimeout(makeAIMove, 800);
+                }
+                return;
+            }
+            
+            board[row][col] = currentPlayer;
+            moveCount[currentPlayer]++;
+            updateMoveCounter();
+            
+            updateBoardDisplay();
+            
+            if (checkWin(row, col)) {
+                showWinner(currentPlayer);
+                return;
+            }
+            
+            // 检查是否到达技能触发点
+            if (moveCount[1] % 3 === 0 && moveCount[1] > 0) {
+                playerCanUseSkill = true;
+            }
+            if (moveCount[2] % 3 === 0 && moveCount[2] > 0) {
+                aiCanUseSkill = true;
+            }
+            
+            // 如果双方都达到了技能触发点，进入技能阶段
+            if (playerCanUseSkill && aiCanUseSkill) {
+                skillTurnPhase = 1; // 进入技能释放阶段
+                nextPlayerAfterSkills = 1; // 技能结束后轮到玩家
+                
+                // 禁用棋盘
+                toggleBoardDisable(true);
+                
+                // 激活玩家技能按钮
+                updateSkillsStatus();
+                updateCurrentPlayer();
+                statusMessage.textContent = "双方都到达技能点，请你先释放技能!";
+                return;
+            }
+            
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            updateCurrentPlayer();
+            
+            if (currentPlayer === 2 && gameActive) {
+                setTimeout(makeAIMove, 800);
+            }
+        }
+        
+        // AI下棋 - 100%贴身战斗
+        function makeAIMove() {
+            if (!gameActive || skillTurnPhase !== 0) return;
+            
+            // 寻找黑棋附近的空位（100%贴身战斗）
+            const adjacentPositions = [];
+            
+            for (let i = 0; i < BOARD_SIZE; i++) {
+                for (let j = 0; j < BOARD_SIZE; j++) {
+                    if (board[i][j] === 0) {
+                        // 检查周围是否有黑棋
+                        const directions = [[-1,0], [1,0], [0,-1], [0,1], [-1,-1], [-1,1], [1,-1], [1,1]];
+                        for (let [di, dj] of directions) {
+                            const ni = i + di;
+                            const nj = j + dj;
+                            if (ni >= 0 && ni < BOARD_SIZE && nj >= 0 && nj < BOARD_SIZE && board[ni][nj] === 1) {
+                                adjacentPositions.push([i, j]);
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            let chosenPosition;
+            if (adjacentPositions.length > 0) {
+                // 100%选择在玩家棋子附近
+                chosenPosition = adjacentPositions[Math.floor(Math.random() * adjacentPositions.length)];
+            } else {
+                // 如果没有相邻位置，随机选择一个空位（fallback）
+                const emptyPositions = [];
+                for (let i = 0; i < BOARD_SIZE; i++) {
+                    for (let j = 0; j < BOARD_SIZE; j++) {
+                        if (board[i][j] === 0) {
+                            emptyPositions.push([i, j]);
+                        }
+                    }
+                }
+                if (emptyPositions.length > 0) {
+                    chosenPosition = emptyPositions[Math.floor(Math.random() * emptyPositions.length)];
+                }
+            }
+            
+            if (chosenPosition) {
+                const [row, col] = chosenPosition;
+                board[row][col] = 2;
+                moveCount[2]++;
+                updateMoveCounter();
+                
+                updateBoardDisplay();
+                
+                if (checkWin(row, col)) {
+                    showWinner(2);
+                    return;
+                }
+                
+                // 检查是否到达技能触发点
+                if (moveCount[1] % 3 === 0 && moveCount[1] > 0) {
+                    playerCanUseSkill = true;
+                }
+                if (moveCount[2] % 3 === 0 && moveCount[2] > 0) {
+                    aiCanUseSkill = true;
+                }
+                
+                // 如果双方都达到了技能触发点，进入技能阶段
+                if (playerCanUseSkill && aiCanUseSkill) {
+                    skillTurnPhase = 1; // 进入技能释放阶段
+                    nextPlayerAfterSkills = 1; // 技能结束后轮到玩家
+                    
+                    // 禁用棋盘
+                    toggleBoardDisable(true);
+                    
+                    // 激活玩家技能按钮
+                    updateSkillsStatus();
+                    updateCurrentPlayer();
+                    statusMessage.textContent = "双方都到达技能点，请你先释放技能!";
+                    return;
+                }
+                
+                currentPlayer = 1;
+                updateCurrentPlayer();
+            }
+        }
+        
+        // 执行飞沙走石动画 - 使用正确的棋子颜色
+        function executeFeishaAnimation(startRow, startCol, cellColor) {
+            const cellSize = 39;
+            const offsetX = 30;
+            const offsetY = 30;
+            
+            // 获取起始位置（相对于棋盘）
+            const startX = startCol * cellSize + offsetX;
+            const startY = startRow * cellSize + offsetY;
+            
+            // 获取什刹海位置（相对于棋盘容器）
+            const boardWrapper = document.querySelector('.board-wrapper');
+            const seaRect = shachaHaiElement.getBoundingClientRect();
+            const wrapperRect = boardWrapper.getBoundingClientRect();
+            const boardRect = chessboard.getBoundingClientRect();
+            
+            const endX = seaRect.left - boardRect.left + seaRect.width / 2;
+            const endY = seaRect.top - boardRect.top + seaRect.height / 2;
+            
+            // 计算中间点（用于抛物线轨迹）
+            const midX = (startX + endX) / 2;
+            const midY = Math.min(startY, endY) - 60; // 向上弯曲
+            
+            // 创建飞行的棋子（使用被移除棋子的实际颜色）
+            const flyingCell = document.createElement('div');
+            flyingCell.className = `flying-cell ${cellColor === 1 ? 'flying-black' : 'flying-white'}`;
+            flyingCell.style.left = startX + 'px';
+            flyingCell.style.top = startY + 'px';
+            
+            // 设置动画变量
+            flyingCell.style.setProperty('--mid-x', (midX - startX) + 'px');
+            flyingCell.style.setProperty('--mid-y', (midY - startY) + 'px');
+            flyingCell.style.setProperty('--end-x', (endX - startX) + 'px');
+            flyingCell.style.setProperty('--end-y', (endY - startY) + 'px');
+            flyingCell.classList.add('flying-animation');
+            
+            chessboard.appendChild(flyingCell);
+            
+            // 动画结束后删除元素
+            setTimeout(() => {
+                flyingCell.remove();
+            }, 1800);
+        }
+        
+        // AI使用技能
+        function useAISkill() {
+            const availableSkills = Object.keys(aiSkills).filter(skill => !aiSkills[skill].used);
+            if (availableSkills.length > 0 && !(qinnaEffect[2] && availableSkills.includes('feisha'))) {
+                const randomSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
+                
+                const opponent = 1;
+                const self = 2;
+                
+                switch(randomSkill) {
+                    case 'feisha':
+                        if (qinnaEffect[2]) return;
+                        
+                        const opponentPieces = [];
+                        for (let i = 0; i < BOARD_SIZE; i++) {
+                            for (let j = 0; j < BOARD_SIZE; j++) {
+                                if (board[i][j] === opponent) {
+                                    opponentPieces.push([i, j]);
+                                }
+                            }
+                        }
+                        
+                        if (opponentPieces.length > 0) {
+                            const [row, col] = opponentPieces[Math.floor(Math.random() * opponentPieces.length)];
+                            // 记录被移除棋子的颜色
+                            const removedCellColor = board[row][col];
+                            
+                            // 执行飞沙走石动画（使用实际颜色）
+                            executeFeishaAnimation(row, col, removedCellColor);
+                            
+                            // 延迟移除棋子以配合动画
+                            setTimeout(() => {
+                                board[row][col] = 0;
+                                updateBoardDisplay();
+                                showNotification(`🌪️ AI使用「${aiSkills[randomSkill].desc}」! 移除了你位于(${String.fromCharCode(65+col)},${BOARD_SIZE-row})的棋子到什刹海!`);
+                                aiSkills.feisha.used = true;
+                                updateSkillsStatus();
+                            }, 900);
+                        }
+                        break;
+                        
+                    case 'liba':
+                        showWinner(2, "力拔山兮气盖世!");
+                        aiSkills.liba.used = true;
+                        updateSkillsStatus();
+                        showNotification(`🏋️‍♂️ AI使用「${aiSkills[randomSkill].desc}」! 直接获胜!`);
+                        break;
+                        
+                    case 'qinna':
+                        qinnaEffect[1] = true;
+                        showNotification(`<tool_call> AI使用「${aiSkills[randomSkill].desc}」! 你无法使用「飞沙走石」技能!`);
+                        aiSkills.qinna.used = true;
+                        updateSkillsStatus();
+                        break;
+                        
+                    case 'dongshan':
+                        board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
+                        updateBoardDisplay();
+                        showNotification("🌟 AI使用「东山再起」! 棋局重归初始状态!");
+                        aiSkills.dongshan.used = true;
+                        updateSkillsStatus();
+                        break;
+                        
+                    case 'jingru':
+                        frozenPlayer = 1;
+                        updateBoardDisplay();
+                        showNotification("💧 AI使用「静如止水」! 你下一回合无法行动!");
+                        aiSkills.jingru.used = true;
+                        updateSkillsStatus();
+                        break;
+                        
+                    case 'diaoli':
+                        const opponentPiecesDiaoli = [];
+                        for (let i = 0; i < BOARD_SIZE; i++) {
+                            for (let j = 0; j < BOARD_SIZE; j++) {
+                                if (board[i][j] === opponent) {
+                                    opponentPiecesDiaoli.push([i, j]);
+                                }
+                            }
+                        }
+                        
+                        if (opponentPiecesDiaoli.length > 0) {
+                            // 随机移动2-3个棋子
+                            const moveCountNum = Math.min(opponentPiecesDiaoli.length, 2 + Math.floor(Math.random() * 2));
+                            const emptyPositions = [];
+                            
+                            for (let i = 0; i < BOARD_SIZE; i++) {
+                                for (let j = 0; j < BOARD_SIZE; j++) {
+                                    if (board[i][j] === 0) {
+                                        emptyPositions.push([i, j]);
+                                    }
+                                }
+                            }
+                            
+                            if (emptyPositions.length >= moveCountNum) {
+                                const movedPieces = [];
+                                for (let i = 0; i < moveCountNum; i++) {
+                                    const fromIndex = Math.floor(Math.random() * opponentPiecesDiaoli.length);
+                                    const toIndex = Math.floor(Math.random() * emptyPositions.length);
+                                    
+                                    const [fromRow, fromCol] = opponentPiecesDiaoli[fromIndex];
+                                    const [toRow, toCol] = emptyPositions[toIndex];
+                                    
+                                    board[toRow][toCol] = opponent;
+                                    board[fromRow][fromCol] = 0;
+                                    
+                                    movedPieces.push(`(${String.fromCharCode(65+fromCol)},${BOARD_SIZE-fromRow})→(${String.fromCharCode(65+toCol)},${BOARD_SIZE-toRow})`);
+                                    
+                                    // 更新数组
+                                    opponentPiecesDiaoli.splice(fromIndex, 1);
+                                    emptyPositions.splice(toIndex, 1);
+                                }
+                                
+                                updateBoardDisplay();
+                                showNotification(`🌀 AI使用「调离山头」! 你的棋子被移动: ${movedPieces.join(', ')}`);
+                                aiSkills.diaoli.used = true;
+                                updateSkillsStatus();
+                            }
+                        }
+                        break;
+                        
+                    case 'baojie':
+                        // 清除所有黑棋
+                        let removedCount = 0;
+                        for (let i = 0; i < BOARD_SIZE; i++) {
+                            for (let j = 0; j < BOARD_SIZE; j++) {
+                                if (board[i][j] === opponent) {
+                                    board[i][j] = 0;
+                                    removedCount++;
+                                }
+                            }
+                        }
+                        
+                        if (removedCount > 0) {
+                            updateBoardDisplay();
+                            showNotification(`🧹 AI使用「保洁上门」! 清除了你的${removedCount}枚棋子!`);
+                            aiSkills.baojie.used = true;
+                            updateSkillsStatus();
+                        }
+                        break;
+                        
+                    case 'fanZhuan':
+                        // 交换棋子颜色
+                        for (let i = 0; i < BOARD_SIZE; i++) {
+                            for (let j = 0; j < BOARD_SIZE; j++) {
+                                if (board[i][j] === 1) {
+                                    board[i][j] = 2;
+                                } else if (board[i][j] === 2) {
+                                    board[i][j] = 1;
+                                }
+                            }
+                        }
+                        
+                        updateBoardDisplay();
+                        showNotification("🔁 AI使用「两极反转」! 双方棋子颜色已互换!");
+                        aiSkills.fanZhuan.used = true;
+                        updateSkillsStatus();
+                        break;
+                }
+                
+                // AI使用技能后，结束技能阶段
+                skillTurnPhase = 0;
+                playerCanUseSkill = false;
+                aiCanUseSkill = false;
+                
+                // 启用棋盘
+                toggleBoardDisable(false);
+                
+                // 技能结束后轮到指定玩家
+                setTimeout(() => {
+                    currentPlayer = nextPlayerAfterSkills;
+                    updateCurrentPlayer();
+                    statusMessage.textContent = "技能释放完成，继续游戏!";
+                    
+                    if (currentPlayer === 2 && gameActive) {
+                        setTimeout(makeAIMove, 800);
+                    }
+                }, 2200);
+            }
+        }
+        
+        // 检查胜利
+        function checkWin(row, col) {
+            const player = board[row][col];
+            if (player === 0) return false;
+            
+            const directions = [
+                [0, 1], [1, 0], [1, 1], [1, -1]
+            ];
+            
+            for (let [dx, dy] of directions) {
+                let count = 1;
+                
+                // 正方向
+                for (let i = 1; i < 5; i++) {
+                    const newRow = row + dx * i;
+                    const newCol = col + dy * i;
+                    if (newRow >= 0 && newRow < BOARD_SIZE && 
+                        newCol >= 0 && newCol < BOARD_SIZE && 
+                        board[newRow][newCol] === player) {
+                        count++;
+                    } else break;
+                }
+                
+                // 反方向
+                for (let i = 1; i < 5; i++) {
+                    const newRow = row - dx * i;
+                    const newCol = col - dy * i;
+                    if (newRow >= 0 && newRow < BOARD_SIZE && 
+                        newCol >= 0 && newCol < BOARD_SIZE && 
+                        board[newRow][newCol] === player) {
+                        count++;
+                    } else break;
+                }
+                
+                if (count >= 5) return true;
+            }
+            
+            return false;
+        }
+        
+        // 使用技能
+        function useSkill(skillName) {
+            // 只能在技能阶段使用技能
+            if (skillTurnPhase !== 1 || !playerCanUseSkill || playerSkills[skillName].used) return;
+            
+            const opponent = 2;
+            const self = 1;
+            const isPlayerAction = true;
+            
+            switch(skillName) {
+                case 'feisha': // 飞沙走石
+                    if (qinnaEffect[self]) {
+                        showNotification("你被「擒拿制敌」克制，无法使用此技能!");
+                        return;
+                    }
+                    
+                    const opponentPieces = [];
+                    for (let i = 0; i < BOARD_SIZE; i++) {
+                        for (let j = 0; j < BOARD_SIZE; j++) {
+                            if (board[i][j] === opponent) {
+                                opponentPieces.push([i, j]);
+                            }
+                        }
+                    }
+                    
+                    if (opponentPieces.length > 0) {
+                        const [row, col] = opponentPieces[Math.floor(Math.random() * opponentPieces.length)];
+                        // 记录被移除棋子的颜色
+                        const removedCellColor = board[row][col];
+                        
+                        // 执行飞沙走石动画（使用实际颜色）
+                        executeFeishaAnimation(row, col, removedCellColor);
+                        
+                        // 延迟移除棋子以配合动画
+                        setTimeout(() => {
+                            board[row][col] = 0;
+                            updateBoardDisplay();
+                            showNotification(`🌪️「${playerSkills[skillName].desc}」发动! 移除了对手位于(${String.fromCharCode(65+col)},${BOARD_SIZE-row})的棋子到什刹海!`);
+                            playerSkills.feisha.used = true;
+                            updateSkillsStatus();
+                        }, 900);
+                    } else {
+                        showNotification("对手没有可以移除的棋子!");
+                    }
+                    break;
+                    
+                case 'liba': // 力拔山兮
+                    showWinner(self, "力拔山兮气盖世!");
+                    playerSkills.liba.used = true;
+                    updateSkillsStatus();
+                    showNotification(`🏋️‍♂️「${playerSkills[skillName].desc}」发动! 直接获胜!`);
+                    toggleBoardDisable(false); // 解除禁用
+                    return;
+                    
+                case 'qinna': // 擒拿制敌
+                    qinnaEffect[opponent] = true;
+                    showNotification(`<tool_call>「${playerSkills[skillName].desc}」发动! 对手无法使用「飞沙走石」技能!`);
+                    playerSkills.qinna.used = true;
+                    updateSkillsStatus();
+                    break;
+                    
+                case 'dongshan': // 东山再起
+                    board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
+                    updateBoardDisplay();
+                    showNotification("🌟「东山再起」发动! 棋局重归初始状态!");
+                    playerSkills.dongshan.used = true;
+                    updateSkillsStatus();
+                    break;
+                    
+                case 'jingru': // 静如止水
+                    frozenPlayer = opponent;
+                    updateBoardDisplay();
+                    showNotification(`💧「${playerSkills[skillName].desc}」发动! 对手下回合无法行动!`);
+                    playerSkills.jingru.used = true;
+                    updateSkillsStatus();
+                    break;
+                    
+                case 'diaoli': // 调离山头
+                    const opponentPiecesDiaoli = [];
+                    for (let i = 0; i < BOARD_SIZE; i++) {
+                        for (let j = 0; j < BOARD_SIZE; j++) {
+                            if (board[i][j] === opponent) {
+                                opponentPiecesDiaoli.push([i, j]);
+                            }
+                        }
+                    }
+                    
+                    if (opponentPiecesDiaoli.length > 0) {
+                        // 随机移动2-3个棋子
+                        const moveCountNum = Math.min(opponentPiecesDiaoli.length, 2 + Math.floor(Math.random() * 2));
+                        const emptyPositions = [];
+                        
+                        for (let i = 0; i < BOARD_SIZE; i++) {
+                            for (let j = 0; j < BOARD_SIZE; j++) {
+                                if (board[i][j] === 0) {
+                                    emptyPositions.push([i, j]);
+                                }
+                            }
+                        }
+                        
+                        if (emptyPositions.length >= moveCountNum) {
+                            const movedPieces = [];
+                            for (let i = 0; i < moveCountNum; i++) {
+                                const fromIndex = Math.floor(Math.random() * opponentPiecesDiaoli.length);
+                                const toIndex = Math.floor(Math.random() * emptyPositions.length);
+                                
+                                const [fromRow, fromCol] = opponentPiecesDiaoli[fromIndex];
+                                const [toRow, toCol] = emptyPositions[toIndex];
+                                
+                                board[toRow][toCol] = opponent;
+                                board[fromRow][fromCol] = 0;
+                                
+                                movedPieces.push(`(${String.fromCharCode(65+fromCol)},${BOARD_SIZE-fromRow})→(${String.fromCharCode(65+toCol)},${BOARD_SIZE-toRow})`);
+                                
+                                // 更新数组
+                                opponentPiecesDiaoli.splice(fromIndex, 1);
+                                emptyPositions.splice(toIndex, 1);
+                            }
+                            
+                            updateBoardDisplay();
+                            showNotification(`🌀「${playerSkills[skillName].desc}」发动! 对手棋子被移动: ${movedPieces.join(', ')}`);
+                            playerSkills.diaoli.used = true;
+                            updateSkillsStatus();
+                        } else {
+                            showNotification("棋盘空间不足，无法使用此技能!");
+                        }
+                    } else {
+                        showNotification("对手没有棋子可以移动!");
+                    }
+                    break;
+                    
+                case 'baojie': // 保洁上门
+                    // 清除所有对手棋子
+                    let removedCount = 0;
+                    for (let i = 0; i < BOARD_SIZE; i++) {
+                        for (let j = 0; j < BOARD_SIZE; j++) {
+                            if (board[i][j] === opponent) {
+                                board[i][j] = 0;
+                                removedCount++;
+                            }
+                        }
+                    }
+                    
+                    if (removedCount > 0) {
+                        updateBoardDisplay();
+                        showNotification(`🧹「${playerSkills[skillName].desc}」发动! 清除了对手的${removedCount}枚棋子!`);
+                        playerSkills.baojie.used = true;
+                        updateSkillsStatus();
+                    } else {
+                        showNotification("对手没有棋子可以清除!");
+                    }
+                    break;
+                    
+                case 'fanZhuan': // 两极反转
+                    // 交换棋子颜色
+                    for (let i = 0; i < BOARD_SIZE; i++) {
+                        for (let j = 0; j < BOARD_SIZE; j++) {
+                            if (board[i][j] === 1) {
+                                board[i][j] = 2;
+                            } else if (board[i][j] === 2) {
+                                board[i][j] = 1;
+                            }
+                        }
+                    }
+                    
+                    updateBoardDisplay();
+                    showNotification("🔁「两极反转」发动! 双方棋子颜色已互换!");
+                    playerSkills.fanZhuan.used = true;
+                    updateSkillsStatus();
+                    break;
+            }
+            
+            // 玩家使用技能后，进入AI技能阶段
+            skillTurnPhase = 2;
+            playerCanUseSkill = false;
+            statusMessage.textContent = "等待AI释放技能...";
+            
+            // 1.5秒后AI释放技能
+            setTimeout(() => {
+                useAISkill();
+            }, 1500);
+        }
+        
+        // 显示胜利
+        function showWinner(winner, specialWinReason = "") {
+            gameActive = false;
+            const playerName = winner === 1 ? "黑方玩家" : "白方AI";
+            const winReason = specialWinReason || "五子连珠!";
+            
+            document.getElementById('winnerTitle').textContent = winner === 1 ? "🎉 恭喜获胜!" : "🤖 AI获胜!";
+            document.getElementById('winnerMessage').textContent = `${playerName}${specialWinReason ? `凭借「${specialWinReason}」` : ""}获得胜利! ${winReason}`;
+            
+            winnerModal.style.display = 'block';
+            statusMessage.textContent = `${playerName} 获得了胜利!`;
+            statusMessage.classList.add('winner');
+            toggleBoardDisable(false); // 解除禁用
+        }
+        
+        // 开始新游戏
+        function startNewGame() {
+            board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
+            currentPlayer = 1;
+            gameActive = true;
+            moveCount = { 1: 0, 2: 0 };
+            playerSkills = {
+                feisha: { used: false, desc: "飞沙走石" },
+                liba: { used: false, desc: "力拔山兮" }, 
+                qinna: { used: false, desc: "擒拿制敌" },
+                dongshan: { used: false, desc: "东山再起" },
+                jingru: { used: false, desc: "静如止水" },
+                diaoli: { used: false, desc: "调离山头" },
+                baojie: { used: false, desc: "保洁上门" },
+                fanZhuan: { used: false, desc: "两极反转" }
+            };
+            aiSkills = {
+                feisha: { used: false, desc: "飞沙走石" },
+                liba: { used: false, desc: "力拔山兮" }, 
+                qinna: { used: false, desc: "擒拿制敌" },
+                dongshan: { used: false, desc: "东山再起" },
+                jingru: { used: false, desc: "静如止水" },
+                diaoli: { used: false, desc: "调离山头" },
+                baojie: { used: false, desc: "保洁上门" },
+                fanZhuan: { used: false, desc: "两极反转" }
+            };
+            qinnaEffect = { 1: false, 2: false };
+            frozenPlayer = 0;
+            playerCanUseSkill = false;
+            aiCanUseSkill = false;
+            skillTurnPhase = 0;
+            nextPlayerAfterSkills = 1;
+            lastRemovedCellColor = null;
+            
+            updateBoardDisplay();
+            updateCurrentPlayer();
+            updateSkillsStatus();
+            updateMoveCounter();
+            toggleBoardDisable(false); // 解除禁用
+            
+            statusMessage.textContent = "做好准备，展现你的棋艺吧!";
+            statusMessage.className = "status-message";
+            
+            closeModal();
+        }
+        
+        // 更新当前玩家显示
+        function updateCurrentPlayer() {
+            let displayText;
+            if (skillTurnPhase === 1) {
+                displayText = "技能阶段: ⚫ 请释放技能";
+            } else if (skillTurnPhase === 2) {
+                displayText = "技能阶段: ⚪ AI释放技能中";
+            } else {
+                displayText = currentPlayer === 1 ? 
+                    "当前回合: ⚫ 黑方 (玩家)" : "当前回合: ⚪ 白方 (AI)";
+            }
+            
+            if (frozenPlayer === currentPlayer) {
+                displayText += " ❄️(冻结中)";
+            }
+            
+            currentPlayerElement.textContent = displayText;
+            currentPlayerElement.className = `current-player ${currentPlayer === 1 ? 'black' : 'white'}`;
+        }
+        
+        // 更新步数显示
+        function updateMoveCounter() {
+            moveCounterElement.textContent = `黑方步数: ${moveCount[1]} | 白方步数: ${moveCount[2]}`;
+        }
+        
+        // 更新技能按钮状态
+        function updateSkillsStatus() {
+            Object.keys(playerSkills).forEach(skill => {
+                const button = document.getElementById(skill);
+                button.classList.remove('available', 'used', 'cooldown');
+                
+                if (playerSkills[skill].used) {
+                    button.classList.add('used');
+                } else if (skillTurnPhase === 1 && playerCanUseSkill) {
+                    button.classList.add('available');
+                } else {
+                    button.classList.add('cooldown');
+                }
+            });
+        }
+        
+        // 显示通知
+        function showNotification(message) {
+            notification.textContent = message;
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+        
+        // 关闭模态框
+        function closeModal() {
+            winnerModal.style.display = 'none';
+        }
+        
+        // 初始化游戏
+        function initGame() {
+            initializeBoard();
+            updateCurrentPlayer();
+            updateSkillsStatus();
+            updateMoveCounter();
+            
+            // 点击模态框外部关闭
+            window.onclick = function(event) {
+                if (event.target === winnerModal) {
+                    closeModal();
+                }
+            }
+        }
+        
+        // 页面加载完成后初始化
+        window.onload = initGame;
+    </script>
+</body>
+</html>
