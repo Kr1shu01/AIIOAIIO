@@ -594,32 +594,32 @@
                         <div class="skills-column">
                             <button class="skill-button cooldown" id="feisha" onclick="useSkill('feisha')">
                                 🌪️ 飞沙走石
-                                <div class="skill-description">随机移除对手一个棋子到什刹海</div>
+                                <div class="skill-description">将对方一个棋子丢到什刹海</div>
                             </button>
                             <button class="skill-button cooldown" id="liba" onclick="useSkill('liba')">
                                 🏋️‍♂️ 力拔山兮
                                 <div class="skill-description">愤怒地掀翻棋盘直接获胜</div>
                             </button>
                             <button class="skill-button cooldown" id="qinna" onclick="useSkill('qinna')">
-                                🤜 擒拿制敌
-                                <div class="skill-description">禁止对手使用「飞沙走石」技能</div>
+                                🤜 擒拿擒拿
+                                <div class="skill-description">禁止对方「飞沙走石」</div>
                             </button>
                             <button class="skill-button cooldown" id="dongshan" onclick="useSkill('dongshan')">
                                 🌟 东山再起
-                                <div class="skill-description">恢复棋盘</div>
+                                <div class="skill-description">恢复棋盘到初始态</div>
                             </button>
                         </div>
                         <div class="skills-column">
                             <button class="skill-button cooldown" id="jingru" onclick="useSkill('jingru')">
                                 💧 静如止水
-                                <div class="skill-description">冻结对方一回合</div>
+                                <div class="skill-description">凝结时间冻结空气</div>
                             </button>
                             <button class="skill-button cooldown" id="diaoli" onclick="useSkill('diaoli')">
-                                🌀 调离山头
+                                🌀 调狗离山
                                 <div class="skill-description">随机移动对方棋子</div>
                             </button>
                             <button class="skill-button cooldown" id="baojie" onclick="useSkill('baojie')">
-                                🧹 保洁上门
+                                🧹 我是保洁
                                 <div class="skill-description">清除对方所有棋子</div>
                             </button>
                             <button class="skill-button cooldown" id="fanZhuan" onclick="useSkill('fanZhuan')">
@@ -670,21 +670,21 @@
         let playerSkills = {
             feisha: { used: false, desc: "飞沙走石" },
             liba: { used: false, desc: "力拔山兮" }, 
-            qinna: { used: false, desc: "擒拿制敌" },
+            qinna: { used: false, desc: "擒拿擒拿" },
             dongshan: { used: false, desc: "东山再起" },
             jingru: { used: false, desc: "静如止水" },
-            diaoli: { used: false, desc: "调离山头" },
-            baojie: { used: false, desc: "保洁上门" },
+            diaoli: { used: false, desc: "调狗离山" },
+            baojie: { used: false, desc: "我是保洁" },
             fanZhuan: { used: false, desc: "两极反转" }
         };
         let aiSkills = {
             feisha: { used: false, desc: "飞沙走石" },
             liba: { used: false, desc: "力拔山兮" }, 
-            qinna: { used: false, desc: "擒拿制敌" },
+            qinna: { used: false, desc: "擒拿擒拿" },
             dongshan: { used: false, desc: "东山再起" },
             jingru: { used: false, desc: "静如止水" },
-            diaoli: { used: false, desc: "调离山头" },
-            baojie: { used: false, desc: "保洁上门" },
+            diaoli: { used: false, desc: "调狗离山" },
+            baojie: { used: false, desc: "我是保洁" },
             fanZhuan: { used: false, desc: "两极反转" }
         };
         let qinnaEffect = { 1: false, 2: false }; // 擒拿技能效果，谁被克制
@@ -1024,163 +1024,173 @@
         // AI使用技能
         function useAISkill() {
             const availableSkills = Object.keys(aiSkills).filter(skill => !aiSkills[skill].used);
-            if (availableSkills.length > 0 && !(qinnaEffect[2] && availableSkills.includes('feisha'))) {
-                const randomSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
+            if (availableSkills.length > 0) {
+                // 只过滤掉被擒拿限制的飞沙走石技能
+                const filteredSkills = availableSkills.filter(skill => {
+                    if (skill === 'feisha' && qinnaEffect[2]) {
+                        return false; // 被擒拿时不能使用飞沙走石
+                    }
+                    return true;
+                });
                 
-                const opponent = 1;
-                const self = 2;
-                
-                switch(randomSkill) {
-                    case 'feisha':
-                        if (qinnaEffect[2]) return;
-                        
-                        const opponentPieces = [];
-                        for (let i = 0; i < BOARD_SIZE; i++) {
-                            for (let j = 0; j < BOARD_SIZE; j++) {
-                                if (board[i][j] === opponent) {
-                                    opponentPieces.push([i, j]);
-                                }
-                            }
-                        }
-                        
-                        if (opponentPieces.length > 0) {
-                            const [row, col] = opponentPieces[Math.floor(Math.random() * opponentPieces.length)];
-                            // 记录被移除棋子的颜色
-                            const removedCellColor = board[row][col];
+                if (filteredSkills.length > 0) {
+
+                    const randomSkill = availableSkills[Math.floor(Math.random() * availableSkills.length)];
+                    
+                    const opponent = 1;
+                    const self = 2;
+                    
+                    switch(randomSkill) {
+                        case 'feisha':
+                            if (qinnaEffect[2]) return;
                             
-                            // 执行飞沙走石动画（使用实际颜色）
-                            executeFeishaAnimation(row, col, removedCellColor);
-                            
-                            // 延迟移除棋子以配合动画
-                            setTimeout(() => {
-                                board[row][col] = 0;
-                                updateBoardDisplay();
-                                showNotification(`🌪️ AI使用「${aiSkills[randomSkill].desc}」! 移除了你位于(${String.fromCharCode(65+col)},${BOARD_SIZE-row})的棋子到什刹海!`);
-                                aiSkills.feisha.used = true;
-                                updateSkillsStatus();
-                            }, 900);
-                        }
-                        break;
-                        
-                    case 'liba':
-                        showWinner(2, "力拔山兮气盖世!");
-                        aiSkills.liba.used = true;
-                        updateSkillsStatus();
-                        showNotification(`🏋️‍♂️ AI使用「${aiSkills[randomSkill].desc}」! 直接获胜!`);
-                        break;
-                        
-                    case 'qinna':
-                        qinnaEffect[1] = true;
-                        showNotification(`🤜 AI使用「${aiSkills[randomSkill].desc}」! 你无法使用「飞沙走石」技能!`);
-                        aiSkills.qinna.used = true;
-                        updateSkillsStatus();
-                        break;
-                        
-                    case 'dongshan':
-                        board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
-                        updateBoardDisplay();
-                        showNotification("🌟 AI使用「东山再起」! 棋局重归初始状态!");
-                        aiSkills.dongshan.used = true;
-                        updateSkillsStatus();
-                        break;
-                        
-                    case 'jingru':
-                        frozenPlayer = 1;
-                        updateBoardDisplay();
-                        showNotification("💧 AI使用「静如止水」! 你下一回合无法行动!");
-                        aiSkills.jingru.used = true;
-                        updateSkillsStatus();
-                        break;
-                        
-                    case 'diaoli':
-                        const opponentPiecesDiaoli = [];
-                        for (let i = 0; i < BOARD_SIZE; i++) {
-                            for (let j = 0; j < BOARD_SIZE; j++) {
-                                if (board[i][j] === opponent) {
-                                    opponentPiecesDiaoli.push([i, j]);
-                                }
-                            }
-                        }
-                        
-                        if (opponentPiecesDiaoli.length > 0) {
-                            // 随机移动2-3个棋子
-                            const moveCountNum = Math.min(opponentPiecesDiaoli.length, 2 + Math.floor(Math.random() * 2));
-                            const emptyPositions = [];
-                            
+                            const opponentPieces = [];
                             for (let i = 0; i < BOARD_SIZE; i++) {
                                 for (let j = 0; j < BOARD_SIZE; j++) {
-                                    if (board[i][j] === 0) {
-                                        emptyPositions.push([i, j]);
+                                    if (board[i][j] === opponent) {
+                                        opponentPieces.push([i, j]);
                                     }
                                 }
                             }
                             
-                            if (emptyPositions.length >= moveCountNum) {
-                                const movedPieces = [];
-                                for (let i = 0; i < moveCountNum; i++) {
-                                    const fromIndex = Math.floor(Math.random() * opponentPiecesDiaoli.length);
-                                    const toIndex = Math.floor(Math.random() * emptyPositions.length);
-                                    
-                                    const [fromRow, fromCol] = opponentPiecesDiaoli[fromIndex];
-                                    const [toRow, toCol] = emptyPositions[toIndex];
-                                    
-                                    board[toRow][toCol] = opponent;
-                                    board[fromRow][fromCol] = 0;
-                                    
-                                    movedPieces.push(`(${String.fromCharCode(65+fromCol)},${BOARD_SIZE-fromRow})→(${String.fromCharCode(65+toCol)},${BOARD_SIZE-toRow})`);
-                                    
-                                    // 更新数组
-                                    opponentPiecesDiaoli.splice(fromIndex, 1);
-                                    emptyPositions.splice(toIndex, 1);
+                            if (opponentPieces.length > 0) {
+                                const [row, col] = opponentPieces[Math.floor(Math.random() * opponentPieces.length)];
+                                // 记录被移除棋子的颜色
+                                const removedCellColor = board[row][col];
+                                
+                                // 执行飞沙走石动画（使用实际颜色）
+                                executeFeishaAnimation(row, col, removedCellColor);
+                                
+                                // 延迟移除棋子以配合动画
+                                setTimeout(() => {
+                                    board[row][col] = 0;
+                                    updateBoardDisplay();
+                                    showNotification(`🌪️ AI使用「${aiSkills[randomSkill].desc}」! 移除了你位于(${String.fromCharCode(65+col)},${BOARD_SIZE-row})的棋子到什刹海!`);
+                                    aiSkills.feisha.used = true;
+                                    updateSkillsStatus();
+                                }, 900);
+                            }
+                            break;
+                            
+                        case 'liba':
+                            showWinner(2, "力拔山兮气盖世!");
+                            aiSkills.liba.used = true;
+                            updateSkillsStatus();
+                            showNotification(`🏋️‍♂️ AI使用「${aiSkills[randomSkill].desc}」! 直接获胜!`);
+                            break;
+                            
+                        case 'qinna':
+                            qinnaEffect[1] = true;
+                            showNotification(`🤜 AI使用「${aiSkills[randomSkill].desc}」! 你无法使用「飞沙走石」技能!`);
+                            aiSkills.qinna.used = true;
+                            updateSkillsStatus();
+                            break;
+                            
+                        case 'dongshan':
+                            board = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(0));
+                            updateBoardDisplay();
+                            showNotification("🌟 AI使用「东山再起」! 棋局重归初始状态!");
+                            aiSkills.dongshan.used = true;
+                            updateSkillsStatus();
+                            break;
+                            
+                        case 'jingru':
+                            frozenPlayer = 1;
+                            updateBoardDisplay();
+                            showNotification("💧 AI使用「静如止水」! 你下一回合无法行动!");
+                            aiSkills.jingru.used = true;
+                            updateSkillsStatus();
+                            break;
+                            
+                        case 'diaoli':
+                            const opponentPiecesDiaoli = [];
+                            for (let i = 0; i < BOARD_SIZE; i++) {
+                                for (let j = 0; j < BOARD_SIZE; j++) {
+                                    if (board[i][j] === opponent) {
+                                        opponentPiecesDiaoli.push([i, j]);
+                                    }
+                                }
+                            }
+                            
+                            if (opponentPiecesDiaoli.length > 0) {
+                                // 随机移动2-3个棋子
+                                const moveCountNum = Math.min(opponentPiecesDiaoli.length, 2 + Math.floor(Math.random() * 2));
+                                const emptyPositions = [];
+                                
+                                for (let i = 0; i < BOARD_SIZE; i++) {
+                                    for (let j = 0; j < BOARD_SIZE; j++) {
+                                        if (board[i][j] === 0) {
+                                            emptyPositions.push([i, j]);
+                                        }
+                                    }
                                 }
                                 
+                                if (emptyPositions.length >= moveCountNum) {
+                                    const movedPieces = [];
+                                    for (let i = 0; i < moveCountNum; i++) {
+                                        const fromIndex = Math.floor(Math.random() * opponentPiecesDiaoli.length);
+                                        const toIndex = Math.floor(Math.random() * emptyPositions.length);
+                                        
+                                        const [fromRow, fromCol] = opponentPiecesDiaoli[fromIndex];
+                                        const [toRow, toCol] = emptyPositions[toIndex];
+                                        
+                                        board[toRow][toCol] = opponent;
+                                        board[fromRow][fromCol] = 0;
+                                        
+                                        movedPieces.push(`(${String.fromCharCode(65+fromCol)},${BOARD_SIZE-fromRow})→(${String.fromCharCode(65+toCol)},${BOARD_SIZE-toRow})`);
+                                        
+                                        // 更新数组
+                                        opponentPiecesDiaoli.splice(fromIndex, 1);
+                                        emptyPositions.splice(toIndex, 1);
+                                    }
+                                    
+                                    updateBoardDisplay();
+                                    showNotification(`🌀 AI使用「调狗离山」! 你的棋子被移动: ${movedPieces.join(', ')}`);
+                                    aiSkills.diaoli.used = true;
+                                    updateSkillsStatus();
+                                }
+                            }
+                            break;
+                            
+                        case 'baojie':
+                            // 清除所有黑棋
+                            let removedCount = 0;
+                            for (let i = 0; i < BOARD_SIZE; i++) {
+                                for (let j = 0; j < BOARD_SIZE; j++) {
+                                    if (board[i][j] === opponent) {
+                                        board[i][j] = 0;
+                                        removedCount++;
+                                    }
+                                }
+                            }
+                            
+                            if (removedCount > 0) {
                                 updateBoardDisplay();
-                                showNotification(`🌀 AI使用「调离山头」! 你的棋子被移动: ${movedPieces.join(', ')}`);
-                                aiSkills.diaoli.used = true;
+                                showNotification(`🧹 AI使用「我是保洁」! 清除了你的${removedCount}枚棋子!`);
+                                aiSkills.baojie.used = true;
                                 updateSkillsStatus();
                             }
-                        }
-                        break;
-                        
-                    case 'baojie':
-                        // 清除所有黑棋
-                        let removedCount = 0;
-                        for (let i = 0; i < BOARD_SIZE; i++) {
-                            for (let j = 0; j < BOARD_SIZE; j++) {
-                                if (board[i][j] === opponent) {
-                                    board[i][j] = 0;
-                                    removedCount++;
+                            break;
+                            
+                        case 'fanZhuan':
+                            // 交换棋子颜色
+                            for (let i = 0; i < BOARD_SIZE; i++) {
+                                for (let j = 0; j < BOARD_SIZE; j++) {
+                                    if (board[i][j] === 1) {
+                                        board[i][j] = 2;
+                                    } else if (board[i][j] === 2) {
+                                        board[i][j] = 1;
+                                    }
                                 }
                             }
-                        }
-                        
-                        if (removedCount > 0) {
+                            
                             updateBoardDisplay();
-                            showNotification(`🧹 AI使用「保洁上门」! 清除了你的${removedCount}枚棋子!`);
-                            aiSkills.baojie.used = true;
+                            showNotification("🔁 AI使用「两极反转」! 双方棋子颜色已互换!");
+                            aiSkills.fanZhuan.used = true;
                             updateSkillsStatus();
-                        }
-                        break;
-                        
-                    case 'fanZhuan':
-                        // 交换棋子颜色
-                        for (let i = 0; i < BOARD_SIZE; i++) {
-                            for (let j = 0; j < BOARD_SIZE; j++) {
-                                if (board[i][j] === 1) {
-                                    board[i][j] = 2;
-                                } else if (board[i][j] === 2) {
-                                    board[i][j] = 1;
-                                }
-                            }
-                        }
-                        
-                        updateBoardDisplay();
-                        showNotification("🔁 AI使用「两极反转」! 双方棋子颜色已互换!");
-                        aiSkills.fanZhuan.used = true;
-                        updateSkillsStatus();
-                        break;
+                            break;
+                    }
                 }
-                
                 // AI使用技能后，结束技能阶段
                 skillTurnPhase = 0;
                 playerCanUseSkill = false;
@@ -1254,7 +1264,7 @@
             switch(skillName) {
                 case 'feisha': // 飞沙走石
                     if (qinnaEffect[self]) {
-                        showNotification("你被「擒拿制敌」克制，无法使用此技能!");
+                        showNotification("你被「擒拿擒拿」克制，无法使用此技能!");
                         return;
                     }
                     
@@ -1279,12 +1289,12 @@
                         setTimeout(() => {
                             board[row][col] = 0;
                             updateBoardDisplay();
-                            showNotification(`🌪️「${playerSkills[skillName].desc}」发动! 移除了对手位于(${String.fromCharCode(65+col)},${BOARD_SIZE-row})的棋子到什刹海!`);
+                            showNotification(`🌪️「${playerSkills[skillName].desc}」发动! 移除了对方位于(${String.fromCharCode(65+col)},${BOARD_SIZE-row})的棋子到什刹海!`);
                             playerSkills.feisha.used = true;
                             updateSkillsStatus();
                         }, 900);
                     } else {
-                        showNotification("对手没有可以移除的棋子!");
+                        showNotification("对方没有可以移除的棋子!");
                     }
                     break;
                     
@@ -1296,9 +1306,9 @@
                     toggleBoardDisable(false); // 解除禁用
                     return;
                     
-                case 'qinna': // 擒拿制敌
+                case 'qinna': // 擒拿擒拿
                     qinnaEffect[opponent] = true;
-                    showNotification(`🤜「${playerSkills[skillName].desc}」发动! 对手无法使用「飞沙走石」技能!`);
+                    showNotification(`🤜「${playerSkills[skillName].desc}」发动! 对方无法使用「飞沙走石」技能!`);
                     playerSkills.qinna.used = true;
                     updateSkillsStatus();
                     break;
@@ -1314,12 +1324,12 @@
                 case 'jingru': // 静如止水
                     frozenPlayer = opponent;
                     updateBoardDisplay();
-                    showNotification(`💧「${playerSkills[skillName].desc}」发动! 对手下回合无法行动!`);
+                    showNotification(`💧「${playerSkills[skillName].desc}」发动! 对方下回合无法行动!`);
                     playerSkills.jingru.used = true;
                     updateSkillsStatus();
                     break;
                     
-                case 'diaoli': // 调离山头
+                case 'diaoli': // 调狗离山
                     const opponentPiecesDiaoli = [];
                     for (let i = 0; i < BOARD_SIZE; i++) {
                         for (let j = 0; j < BOARD_SIZE; j++) {
@@ -1362,19 +1372,19 @@
                             }
                             
                             updateBoardDisplay();
-                            showNotification(`🌀「${playerSkills[skillName].desc}」发动! 对手棋子被移动: ${movedPieces.join(', ')}`);
+                            showNotification(`🌀「${playerSkills[skillName].desc}」发动! 对方棋子被移动: ${movedPieces.join(', ')}`);
                             playerSkills.diaoli.used = true;
                             updateSkillsStatus();
                         } else {
                             showNotification("棋盘空间不足，无法使用此技能!");
                         }
                     } else {
-                        showNotification("对手没有棋子可以移动!");
+                        showNotification("对方没有棋子可以移动!");
                     }
                     break;
                     
-                case 'baojie': // 保洁上门
-                    // 清除所有对手棋子
+                case 'baojie': // 我是保洁
+                    // 清除所有对方棋子
                     let removedCount = 0;
                     for (let i = 0; i < BOARD_SIZE; i++) {
                         for (let j = 0; j < BOARD_SIZE; j++) {
@@ -1387,11 +1397,11 @@
                     
                     if (removedCount > 0) {
                         updateBoardDisplay();
-                        showNotification(`🧹「${playerSkills[skillName].desc}」发动! 清除了对手的${removedCount}枚棋子!`);
+                        showNotification(`🧹「${playerSkills[skillName].desc}」发动! 清除了对方的${removedCount}枚棋子!`);
                         playerSkills.baojie.used = true;
                         updateSkillsStatus();
                     } else {
-                        showNotification("对手没有棋子可以清除!");
+                        showNotification("对方没有棋子可以清除!");
                     }
                     break;
                     
@@ -1449,21 +1459,21 @@
             playerSkills = {
                 feisha: { used: false, desc: "飞沙走石" },
                 liba: { used: false, desc: "力拔山兮" }, 
-                qinna: { used: false, desc: "擒拿制敌" },
+                qinna: { used: false, desc: "擒拿擒拿" },
                 dongshan: { used: false, desc: "东山再起" },
                 jingru: { used: false, desc: "静如止水" },
-                diaoli: { used: false, desc: "调离山头" },
-                baojie: { used: false, desc: "保洁上门" },
+                diaoli: { used: false, desc: "调狗离山" },
+                baojie: { used: false, desc: "我是保洁" },
                 fanZhuan: { used: false, desc: "两极反转" }
             };
             aiSkills = {
                 feisha: { used: false, desc: "飞沙走石" },
                 liba: { used: false, desc: "力拔山兮" }, 
-                qinna: { used: false, desc: "擒拿制敌" },
+                qinna: { used: false, desc: "擒拿擒拿" },
                 dongshan: { used: false, desc: "东山再起" },
                 jingru: { used: false, desc: "静如止水" },
-                diaoli: { used: false, desc: "调离山头" },
-                baojie: { used: false, desc: "保洁上门" },
+                diaoli: { used: false, desc: "调狗离山" },
+                baojie: { used: false, desc: "我是保洁" },
                 fanZhuan: { used: false, desc: "两极反转" }
             };
             qinnaEffect = { 1: false, 2: false };
