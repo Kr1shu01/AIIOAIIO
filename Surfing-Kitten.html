@@ -196,8 +196,8 @@
         
         #gameRulesInline p {
             margin: 10px 0;
-            line-height: 1.6;
-            font-size: 1.1rem;
+            line-height: 2.0;
+            font-size: 1.5rem;
         }
         
         #gameRulesInline ul {
@@ -207,8 +207,8 @@
         
         #gameRulesInline li {
             margin: 8px 0;
-            line-height: 1.5;
-            font-size: 1.05rem;
+            line-height: 1.85;
+            font-size: 1.5rem;
         }
         
         .highlight {
@@ -282,10 +282,10 @@
                     <li>🌸 花花喵：听说会带来好运！</li>
                     <li>🦄 独角喵：传说中的冰天帝？</li>
                     <li>🦈 鲨鱼喵：疯狂小鲨鱼。</li>
-                    <li>💣 炸弹喵：普通炸弹。</li>
+                    <li>💣 炸弹喵：真的是普通炸弹吗？</li>
                     <li>🪨 礁石喵：小石头能不能砸到呢？</li>
                     <li>👹 哥布喵：成群结队～</li>
-                    <li>🏮 灯笼喵：送温暖。</li>
+                    <li>🏮 灯笼喵：赠你整座天堂。</li>
                 </ul>
             </div>
             <div id="startGameText">🎮 点击开始冲浪</div>
@@ -352,8 +352,35 @@
                 document.getElementById('mainMenu').style.display = 'flex';
                 document.getElementById('gameOver').style.display = 'none';
                 document.getElementById('uiPanel').style.display = 'none';
+                this.addDecorativeElements();
             }
-            
+            // 在constructor()后面或者startGame()前面添加这个方法
+            addDecorativeElements() {
+                const decorations = [
+                    { emoji: '🦄', left: '13%', top: '25%', size: '130px', rotate: '-20deg' },
+                    { emoji: '🌸', left: '18%', top: '60%', size: '130px', rotate: '-10deg' },
+                    { emoji: '🪨', right: '14%', top: '35%', size: '110px', rotate: '15deg' },
+                    { emoji: '🌊', right: '17%', top: '65%', size: '130px', rotate: '25deg' },
+                    { emoji: '🏮', left: '25%', top: '15%', size: '100px', rotate: '0deg' },
+                    { emoji: '🦈', right: '22%', top: '20%', size: '95px', rotate: '45deg' }
+                ];
+                
+                decorations.forEach((deco, index) => {
+                    const elem = document.createElement('div');
+                    elem.innerHTML = deco.emoji;
+                    elem.style.position = 'absolute';
+                    elem.style.left = deco.left || 'auto';
+                    elem.style.right = deco.right || 'auto';
+                    elem.style.top = deco.top;
+                    elem.style.fontSize = deco.size;
+                    elem.style.transform = `rotate(${deco.rotate})`;
+                    elem.style.opacity = '0.8';
+                    elem.style.zIndex = '250';
+                    elem.style.pointerEvents = 'none';
+                    document.getElementById('mainMenu').appendChild(elem);
+                });
+            }
+
             startGame() {
                 this.gameState = 'playing';
                 document.getElementById('mainMenu').style.display = 'none';
