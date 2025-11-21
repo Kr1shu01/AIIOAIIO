@@ -31,7 +31,7 @@
 - 🎯 沉浸式 gaming 体验喵: 响应式设计适配各设备，流畅动画不卡顿喵
 
 立即体验喵：
-🔗 [🎮 Skill-Gomoku ](Skill-Gomoku.html)
+🔗 [⚫ Skill-Gomoku ](Skill-Gomoku.html)
 
 ### 三喵、 **Surfing-Kitten喵**
 - 🔥 九命冲浪奇遇喵: 海上生存，挑战极限喵
