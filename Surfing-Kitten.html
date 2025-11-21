@@ -522,7 +522,7 @@
             
             get currentSpeed() {
                 if (this.bloodMoonActive) {
-                    return this.baseSpeed + this.speedLevel * 2; // 当前阶段速度的2倍
+                    return this.baseSpeed + this.speedLevel * 1.0; // 当前阶段速度的2倍
                 }
                 return this.baseSpeed + this.speedLevel * 0.5; // 每50分增加0.5速度
             }
