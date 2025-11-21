@@ -413,7 +413,7 @@
         .shacha-hai {
             position: absolute;
             width: 500px; /* 增大什刹海 */
-            height: 300px; /* 增大什刹海 */
+            height: 200px; /* 增大什刹海 */
             background: linear-gradient(135deg, #1e90ff, #00bfff, #4169e1);
             border-radius: 15px;
             display: flex;
@@ -784,9 +784,10 @@
             
             shachaHaiElement = document.createElement('div');
             shachaHaiElement.className = 'shacha-hai';
-            shachaHaiElement.style.left = '0px';
+            shachaHaiElement.style.left = '50%';           // 水平居中关键
             shachaHaiElement.style.bottom = '-120px';
             shachaHaiElement.style.position = 'absolute';
+            shachaHaiElement.style.transform = 'translateX(-50%)';  // 水平居中关键
             
             // 添加文字
             const text = document.createElement('div');
