@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surfing-Kitten</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        #gameContainer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        
+        #uiPanel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+        
+        #score {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        #lives {
+            font-size: 24px;
+            display: flex;
+            gap: 8px;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        .heart {
+            color: #ff4757;
+            font-size: 28px;
+        }
+        
+        #status {
+            margin-top: 10px;
+            font-size: 18px;
+            background: rgba(0,0,0,0.5);
+            padding: 8px 15px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        #eventNotification {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 48px;
+            font-weight: bold;
+            color: #ff4757;
+            text-shadow: 0 0 20px rgba(255, 0, 0, 0.8);
+            z-index: 150;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            text-align: center;
+        }
+        
+        #gameOver {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 15, 30, 0.95);
+            color: white;
+            padding: 40px;
+            border-radius: 25px;
+            text-align: center;
+            z-index: 200;
+            display: none;
+            border: 2px solid rgba(100, 200, 255, 0.3);
+            box-shadow: 0 0 30px rgba(77, 238, 234, 0.6);
+            backdrop-filter: blur(15px);
+            min-width: 400px;
+        }
+        
+        #gameOver h2 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #4deeea;
+            text-shadow: 0 0 10px rgba(77, 238, 234, 0.8);
+        }
+        
+        #finalScore {
+            font-size: 28px;
+            color: #7fdbca;
+            font-weight: bold;
+        }
+        
+        #restartBtn {
+            background: linear-gradient(135deg, #2196F3, #0d47a1);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            font-size: 20px;
+            cursor: pointer;
+            margin-top: 25px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: all 0.3s;
+        }
+        
+        #restartBtn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+        
+        /* 主菜单样式 */
+        #mainMenu {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 300;
+            background: transparent;
+        }
+        
+        #gameTitle {
+            text-align: center;
+            font-size: 4rem;
+            color: #4deeea;
+            text-shadow: 0 0 30px rgba(77, 238, 234, 0.8);
+            font-weight: 800;
+            letter-spacing: 3px;
+            margin-bottom: 30px;
+        }
+        
+        #gameRulesInline {
+            background: rgba(15, 25, 50, 0.8);
+            color: #e6f7ff;
+            padding: 30px;
+            border-radius: 20px;
+            margin: 20px 0;
+            max-width: 800px;
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            overflow-y: auto;
+            max-height: 60vh;
+        }
+        
+        #gameRulesInline h3 {
+            color: #4deeea;
+            margin: 15px 0 10px 0;
+            font-size: 1.4rem;
+            text-shadow: 0 0 10px rgba(77, 238, 234, 0.5);
+        }
+        
+        #gameRulesInline p {
+            margin: 10px 0;
+            line-height: 1.6;
+            font-size: 1.1rem;
+        }
+        
+        #gameRulesInline ul {
+            text-align: left;
+            margin: 10px 0 15px 30px;
+        }
+        
+        #gameRulesInline li {
+            margin: 8px 0;
+            line-height: 1.5;
+            font-size: 1.05rem;
+        }
+        
+        .highlight {
+            color: #4deeea;
+            font-weight: 500;
+        }
+        
+        #startGameText {
+            font-size: 2.5rem;
+            color: #7fdbca;
+            text-shadow: 0 0 20px rgba(127, 219, 202, 0.8);
+            margin-top: 30px;
+            cursor: pointer;
+            background: rgba(15, 25, 50, 0.8);
+            padding: 20px 40px;
+            border-radius: 30px;
+            border: 1px solid rgba(100, 200, 255, 0.2);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            animation: pulse 2s infinite;
+        }
+        
+        #startGameText:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.6);
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="uiPanel">
+            <div id="score">得分: 0</div>
+            <div id="lives">
+                生命: 
+                <span class="heart">❤️</span>
+                <span class="heart">❤️</span>
+                <span class="heart">❤️</span>
+                <span class="heart">❤️</span>
+                <span class="heart">❤️</span>
+                <span class="heart">❤️</span>
+                <span class="heart">❤️</span>
+                <span class="heart">❤️</span>
+                <span class="heart">❤️</span>
+            </div>
+            <div id="status">阶段 1</div>
+        </div>
+
+        <div id="eventNotification"></div>
+
+        <!-- 主菜单 -->
+        <div id="mainMenu">
+            <h1 id="gameTitle">😸 Surfing-Kitten</h1>
+            <div id="gameRulesInline">
+                <h3>操作:</h3>
+                <p>使用 <span class="highlight">WASD 键</span> 控制小喵冲浪</p>
+                
+                <h3>目标:</h3>
+                <p>收集花喵，避开危险，生存越久得分越高喵！</p>
+                
+                <h3>元素:</h3>
+                <ul>
+                    <li>🌸 花花喵：听说会带来好运！</li>
+                    <li>🦄 独角喵：传说中的冰天帝？</li>
+                    <li>🦈 鲨鱼喵：疯狂小鲨鱼。</li>
+                    <li>💣 炸弹喵：普通炸弹。</li>
+                    <li>🪨 礁石喵：小石头能不能砸到呢？</li>
+                    <li>👹 哥布喵：成群结队～</li>
+                    <li>🏮 灯笼喵：送温暖。</li>
+                </ul>
+            </div>
+            <div id="startGameText">🎮 点击开始冲浪</div>
+        </div>
+
+        <div id="gameOver">
+            <h2>游戏结束!</h2>
+            <p>最终得分: <span id="finalScore">0</span></p>
+            <button id="restartBtn">重新开始</button>
+        </div>
+    </div>
+
+    <script>
+        class SurfingGame {
+            constructor() {
+                this.canvas = document.getElementById('gameCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.resizeCanvas();
+                
+                // 游戏状态
+                this.gameState = 'menu'; // menu, playing, gameOver
+                
+                // 预加载emoji图像数据
+                this.loadEmojiImages();
+                
+                // 显示主菜单
+                this.showMainMenu();
+                this.setupMenuListeners();
+            }
+            
+            loadEmojiImages() {
+                // 使用更高质量的表情符号绘制
+                this.emojis = {
+                    shark: '🦈',
+                    rock: '🪨',
+                    bomb: '💣',
+                    flower: '🌸',
+                    butterfly: '🦄',
+                    board: '😹', // 换成小猫
+                    meteor: '☄️',
+                    goblin: '👺',
+                    lantern: '🏮',
+                    meteorShadow: '🌑'
+                };
+            }
+            
+            resizeCanvas() {
+                this.canvas.width = window.innerWidth;
+                this.canvas.height = window.innerHeight;
+            }
+            
+            setupMenuListeners() {
+                document.getElementById('startGameText').addEventListener('click', () => {
+                    this.startGame();
+                });
+                
+                document.getElementById('restartBtn').addEventListener('click', () => {
+                    this.startGame();
+                });
+            }
+            
+            showMainMenu() {
+                this.gameState = 'menu';
+                document.getElementById('mainMenu').style.display = 'flex';
+                document.getElementById('gameOver').style.display = 'none';
+                document.getElementById('uiPanel').style.display = 'none';
+            }
+            
+            startGame() {
+                this.gameState = 'playing';
+                document.getElementById('mainMenu').style.display = 'none';
+                document.getElementById('gameOver').style.display = 'none';
+                document.getElementById('uiPanel').style.display = 'block';
+                
+                // 初始化游戏
+                this.restartGame();
+            }
+            
+            restartGame() {
+                console.log("Restarting game...");
+                
+                // 重置所有游戏状态
+                this.score = 0;
+                this.lives = 9; // 改为9条命
+                this.gameRunning = true;
+                this.backgroundColorIndex = 0;
+                this.baseSpeed = 2.5; // 基础速度
+                this.speedLevel = 0; // 速度等级
+                this.scorePhase = 0; // 得分阶段
+                
+                // 阶段事件控制系统
+                this.currentPhase = 0;
+                this.phaseEventScores = []; // 存储当前阶段触发事件的分数点
+                this.triggeredEvents = new Set(); // 记录已触发的事件
+                
+                // 初始化阶段事件计划
+                this.initializePhaseEvents();
+                
+                // 重置玩家属性（只有冲浪板/小猫）
+                this.player = {
+                    x: this.canvas.width / 2,
+                    y: this.canvas.height - 100,
+                    width: 50,
+                    height: 50,
+                    invincible: false,
+                    invincibleTimer: 0,
+                    boosting: false,
+                    boostTimer: 0
+                };
+                
+                // 清空所有游戏对象
+                this.obstacles = [];
+                this.flowers = [];
+                this.butterflies = [];
+                this.particles = [];
+                this.meteors = [];
+                this.goblins = [];
+                this.lanterns = [];
+                
+                // 重置时间相关变量
+                this.lastObstacleTime = 0;
+                this.lastFlowerTime = 0;
+                this.lastButterflyTime = 0;
+                this.obstacleInterval = 1200;
+                this.flowerInterval = 1000;
+                this.butterflyInterval = 3500;
+                
+                // 血月事件特殊状态
+                this.bloodMoonActive = false;
+                this.bloodMoonTimer = 0;
+                this.bloodMoonStartTime = 0;
+                
+                // 重置键盘输入
+                this.keys = {};
+                
+                // 隐藏游戏结束界面
+                document.getElementById('gameOver').style.display = 'none';
+                
+                // 更新UI显示
+                this.updateUI();
+                
+                // 如果这是第一次启动游戏，则初始化事件监听器
+                if (!this.initialized) {
+                    this.initialized = true;
+                    window.addEventListener('resize', () => this.resizeCanvas());
+                    
+                    document.addEventListener('keydown', (e) => {
+                        this.keys[e.key.toLowerCase()] = true;
+                    });
+                    
+                    document.addEventListener('keyup', (e) => {
+                        this.keys[e.key.toLowerCase()] = false;
+                    });
+                    
+                    this.gameLoop();
+                }
+            }
+            
+            initializePhaseEvents() {
+                // 为当前阶段随机选择两个触发分数点和对应的事件
+                this.phaseEventScores = [];
+                this.triggeredEvents.clear();
+                
+                // 生成该阶段内的两个随机分数点
+                const phaseStart = this.currentPhase * 50;
+                const phaseEnd = phaseStart + 49;
+                
+                // 确保分数点不重复且在合理范围内
+                const score1 = Math.floor(Math.random() * 40) + phaseStart + 5; // 5-45范围内
+                let score2;
+                do {
+                    score2 = Math.floor(Math.random() * 40) + phaseStart + 5;
+                } while (Math.abs(score2 - score1) < 10); // 确保两个事件间隔至少10分
+                
+                const eventScores = [score1, score2].sort((a, b) => a - b);
+                
+                // 根据新的概率分布分配事件
+                const events = [];
+                events.push(this.getRandomEventType());
+                events.push(this.getRandomEventType());
+                
+                this.phaseEventScores = [
+                    { score: eventScores[0], event: events[0] },
+                    { score: eventScores[1], event: events[1] }
+                ];
+                
+                console.log("Phase events planned:", this.phaseEventScores);
+            }
+            
+            getRandomEventType() {
+                // 新的概率分布: 血月0.3, 陨石0.2, 哥布林0.3, 灯笼0.2
+                const rand = Math.random();
+                if (rand < 0.3) return 'bloodmoon';   // 30%
+                if (rand < 0.5) return 'meteor';      // 20%
+                if (rand < 0.85) return 'goblin';     // 35%
+                return 'lantern';                     // 15%
+            }
+            
+            updateSpeed() {
+                const newSpeedLevel = Math.floor(this.score / 50);
+                if (newSpeedLevel !== this.speedLevel) {
+                    this.speedLevel = newSpeedLevel;
+                }
+                
+                // 检查阶段变化
+                const newPhase = Math.floor(this.score / 50);
+                if (newPhase !== this.currentPhase) {
+                    this.currentPhase = newPhase;
+                    this.initializePhaseEvents(); // 进入新阶段时重新规划事件
+                    if (this.bloodMoonActive) {
+                        this.bloodMoonActive = false;
+                        this.bloodMoonTimer = 0;
+                    }
+                }
+            }
+            
+            checkPhaseEvents() {
+                // 检查是否到达预设的事件触发分数
+                for (let i = 0; i < this.phaseEventScores.length; i++) {
+                    const eventInfo = this.phaseEventScores[i];
+                    if (this.score >= eventInfo.score && !this.triggeredEvents.has(eventInfo.score)) {
+                        this.triggeredEvents.add(eventInfo.score);
+                        
+                        // 显示预告并触发事件
+                        this.showEventNotification(this.getEventName(eventInfo.event));
+                        setTimeout(() => {
+                            if (this.gameRunning) {
+                                this.activateEvent(eventInfo.event);
+                            }
+                        }, 3000); // 3秒后真正触发事件
+                    }
+                }
+            }
+            
+            get currentSpeed() {
+                if (this.bloodMoonActive) {
+                    return this.baseSpeed + this.speedLevel * 2; // 当前阶段速度的2倍
+                }
+                return this.baseSpeed + this.speedLevel * 0.5; // 每50分增加0.5速度
+            }
+            
+            get flowerPoints() {
+                return Math.floor(this.score / 50) + 1; // 第一阶段1分，第二阶段2分，以此类推
+            }
+            
+            updateBackground() {
+                if (this.bloodMoonActive) {
+                    document.body.style.background = 'linear-gradient(135deg, #2c0000, #4a0000, #6b0000)';
+                    return;
+                }
+                
+                const gradients = [
+                    'linear-gradient(135deg, #1a1a2e, #16213e, #0f3460)', // 默认蓝色
+                    'linear-gradient(135deg, #0c2461, #1e3799, #4a69bd)', // 夜晚
+                    'linear-gradient(135deg, #a9d8eb, #a0cf93, #f5e4a6)', // 清晨
+                    'linear-gradient(135deg, #ff6b35, #f7931e, #ffd23f)' // 日落
+                ];
+                
+                let index = Math.floor(this.score / 50) % gradients.length;
+                document.body.style.background = gradients[index];
+            }
+            
+            handleInput() {
+                // 提升玩家运动速度
+                const moveSpeed = (this.player.boosting ? this.currentSpeed * 2.5 : this.currentSpeed) * 1.2;
+                
+                if (this.keys['a'] && this.player.x > 0) {
+                    this.player.x -= moveSpeed;
+                }
+                if (this.keys['d'] && this.player.x < this.canvas.width - this.player.width) {
+                    this.player.x += moveSpeed;
+                }
+                if (this.keys['w'] && this.player.y > 0) {
+                    this.player.y -= moveSpeed;
+                }
+                if (this.keys['s'] && this.player.y < this.canvas.height - this.player.height) {
+                    this.player.y += moveSpeed;
+                }
+            }
+            
+            getEventName(eventType) {
+                const names = {
+                    'meteor': '🔥 陨石坠落中!',
+                    'goblin': '👹 哥布林入侵!',
+                    'lantern': '🏮 灯笼夜!',
+                    'bloodmoon': '🌙 血月降临!'
+                };
+                return names[eventType] || eventType;
+            }
+            
+            showEventNotification(text) {
+                const notification = document.getElementById('eventNotification');
+                notification.textContent = text;
+                notification.style.opacity = '1';
+                
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                }, 2500);
+            }
+            
+            activateEvent(eventType) {
+                switch(eventType) {
+                    case 'meteor':
+                        this.spawnMeteor();
+                        break;
+                    case 'goblin':
+                        this.spawnGoblinInvasion();
+                        break;
+                    case 'lantern':
+                        this.spawnLanterns();
+                        break;
+                    case 'bloodmoon':
+                        this.activateBloodMoon();
+                        break;
+                }
+            }
+            
+            spawnMeteor() {
+                const meteor = {
+                    x: Math.random() * (this.canvas.width - 200),
+                    y: -300,
+                    size: 150, // 半径变为原来的4倍
+                    maxSize: 320,
+                    targetSize: 320,
+                    growing: true,
+                    fallSpeed: 8,
+                    impactRadius: 500, // 爆炸半径变为原来的4倍
+                    landed: false
+                };
+                this.meteors.push(meteor);
+            }
+            
+            spawnGoblinInvasion() {
+                const formations = ['line', 'L', 'person', 'V'];
+                const formation = formations[Math.floor(Math.random() * formations.length)];
+                const goblinCount = 10; // 数量变为原来的2倍
+                
+                for (let i = 0; i < goblinCount; i++) {
+                    let x, y;
+                    const startX = Math.random() * (this.canvas.width - 200) + 100;
+                    const startY = -50;
+                    
+                    switch(formation) {
+                        case 'line':
+                            x = startX + (i * 60);
+                            y = startY;
+                            break;
+                        case 'L':
+                            if (i < 6) {
+                                x = startX;
+                                y = startY + (i * 60);
+                            } else {
+                                x = startX + ((i - 5) * 60);
+                                y = startY + 300;
+                            }
+                            break;
+                        case 'person':
+                            if (i === 0) {
+                                x = startX; // 头部
+                                y = startY;
+                            } else if (i < 5) {
+                                x = startX - 60 + (i * 30); // 身体
+                                y = startY + 60;
+                            } else {
+                                x = startX - 90 + ((i - 4) * 45); // 腿部
+                                y = startY + 120;
+                            }
+                            break;
+                        case 'V':
+                            x = startX + (i * 40) - 160;
+                            y = startY + Math.abs(i - 4) * 40;
+                            break;
+                    }
+                    
+                    this.goblins.push({
+                        x: x,
+                        y: y,
+                        width: 30,
+                        height: 30,
+                        speed: this.currentSpeed * 1.5 // 速度比普通障碍物快1.5倍
+                    });
+                }
+            }
+            
+            spawnLanterns() {
+                // 分散在多个排上
+                for (let row = 0; row < 3; row++) {
+                    for (let col = 0; col < 4; col++) {
+                        if (Math.random() > 0.2) { // 随机出现约10个
+                            this.lanterns.push({
+                                x: Math.random() * (this.canvas.width - 25),
+                                y: -25 - (row * 100), // 分散在不同排
+                                width: 25,
+                                height: 35,
+                                speed: this.currentSpeed // 和普通障碍物相同速度
+                            });
+                        }
+                    }
+                }
+            }
+            
+            activateBloodMoon() {
+                this.bloodMoonActive = true;
+                this.bloodMoonTimer = 600; // 10秒 (60fps * 10)
+                this.bloodMoonStartTime = this.currentPhase; // 记录开始阶段
+                this.flowers = []; // 清除所有花朵
+                
+                // 在血月期间额外生成大量鲨鱼
+                this.spawnBloodMoonSharks();
+            }
+            
+            spawnBloodMoonSharks() {
+                // 生成5倍数量的鲨鱼（原来是每1.2秒生一个，现在生成20个）
+                for (let i = 0; i < 30; i++) { // 5倍数
+                    setTimeout(() => {
+                        if (this.bloodMoonActive) {
+                            this.obstacles.push({
+                                x: Math.random() * (this.canvas.width - 40),
+                                y: -40,
+                                width: 40,
+                                height: 40,
+                                type: 'shark',
+                                chasing: false,
+                                chaseRange: 120,
+                                chaseSpeed: 0,
+                                maxChaseSpeed: this.currentSpeed * 1.05
+                            });
+                        }
+                    }, i * 100); // 每隔0.1秒生成一个
+                }
+            }
+            
+            spawnObstacles(currentTime) {
+                if (currentTime - this.lastObstacleTime > this.obstacleInterval) {
+                    const types = ['shark', 'rock', 'bomb'];
+                    const type = types[Math.floor(Math.random() * types.length)];
+                    
+                    this.obstacles.push({
+                        x: Math.random() * (this.canvas.width - 40),
+                        y: -40,
+                        width: 40,
+                        height: 40,
+                        type: type,
+                        chasing: false,
+                        chaseRange: type === 'shark' ? 150 : 0,
+                        chaseSpeed: 0,
+                        maxChaseSpeed: this.currentSpeed * 1.05 // 降低到1.05倍
+                    });
+                    
+                    this.lastObstacleTime = currentTime;
+                }
+            }
+            
+            spawnFlowers(currentTime) {
+                if (this.bloodMoonActive) return; // 血月期间不生成花朵
+                
+                if (currentTime - this.lastFlowerTime > this.flowerInterval) {
+                    this.flowers.push({
+                        x: Math.random() * (this.canvas.width - 30),
+                        y: -30,
+                        width: 30,
+                        height: 30
+                    });
+                    this.lastFlowerTime = currentTime;
+                }
+            }
+            
+            spawnButterflies(currentTime) {
+                if (currentTime - this.lastButterflyTime > this.butterflyInterval) {
+                    this.butterflies.push({
+                        x: Math.random() * (this.canvas.width - 25),
+                        y: -25,
+                        width: 25,
+                        height: 25
+                    });
+                    this.lastButterflyTime = currentTime;
+                }
+            }
+            
+            updateMeteors() {
+                for (let i = this.meteors.length - 1; i >= 0; i--) {
+                    const meteor = this.meteors[i];
+                    
+                    if (!meteor.landed) {
+                        // 增大陨石阴影
+                        if (meteor.size < meteor.targetSize) {
+                            meteor.size += 1.5;
+                        }
+                        
+                        // 下落
+                        meteor.y += meteor.fallSpeed;
+                        
+                        // 撞击地面
+                        if (meteor.y > this.canvas.height - meteor.impactRadius) {
+                            meteor.landed = true;
+                            
+                            // 检查是否撞击玩家
+                            const distance = Math.sqrt(
+                                Math.pow(meteor.x + meteor.size/2 - (this.player.x + this.player.width/2), 2) +
+                                Math.pow(meteor.y + meteor.size/2 - (this.player.y + this.player.height/2), 2)
+                            );
+                            
+                            if (distance < meteor.impactRadius && !this.player.invincible) {
+                                this.lives = Math.max(0, this.lives - 3); // 扣除三条命
+                                this.player.invincible = true;
+                                this.player.invincibleTimer = 180;
+                                this.createParticles(meteor.x, meteor.y, '#8B0000'); // 暗红色
+                                this.updateUI();
+                                
+                                if (this.lives <= 0) {
+                                    this.gameOver();
+                                }
+                            }
+                            
+                            // 创建撞击效果
+                            this.createParticles(meteor.x, meteor.y, '#8B0000'); // 暗红色
+                        }
+                    } else {
+                        // 撞击后停留一会儿然后消失
+                        meteor.stayTime = (meteor.stayTime || 0) + 1;
+                        if (meteor.stayTime > 120) {
+                            this.meteors.splice(i, 1);
+                        }
+                    }
+                }
+            }
+            
+            updateGoblins() {
+                for (let i = this.goblins.length - 1; i >= 0; i--) {
+                    const goblin = this.goblins[i];
+                    goblin.y += goblin.speed;
+                    
+                    if (goblin.y > this.canvas.height) {
+                        this.goblins.splice(i, 1);
+                    }
+                }
+            }
+            
+            updateLanterns() {
+                for (let i = this.lanterns.length - 1; i >= 0; i--) {
+                    const lantern = this.lanterns[i];
+                    lantern.y += lantern.speed;
+                    
+                    if (lantern.y > this.canvas.height) {
+                        this.lanterns.splice(i, 1);
+                    }
+                }
+            }
+            
+            updateBloodMoon() {
+                if (this.bloodMoonActive) {
+                    this.bloodMoonTimer--;
+                    // 结束条件：时间到10秒 或者 进入下一个阶段
+                    if (this.bloodMoonTimer <= 0 || this.currentPhase !== this.bloodMoonStartTime) {
+                        this.bloodMoonActive = false;
+                        this.bloodMoonTimer = 0;
+                    }
+                }
+            }
+            
+            updateObstacles() {
+                for (let i = this.obstacles.length - 1; i >= 0; i--) {
+                    const obstacle = this.obstacles[i];
+                    
+                    // 鲨鱼追击逻辑
+                    if (obstacle.type === 'shark') {
+                        const distance = Math.sqrt(
+                            Math.pow(obstacle.x - this.player.x, 2) + 
+                            Math.pow(obstacle.y - this.player.y, 2)
+                        );
+                        
+                        if (distance < obstacle.chaseRange) {
+                            obstacle.chasing = true;
+                            // 缓慢加速到最大速度
+                            if (obstacle.chaseSpeed < obstacle.maxChaseSpeed) {
+                                obstacle.chaseSpeed += 0.05;
+                            }
+                            
+                            // 追踪玩家
+                            if (obstacle.x < this.player.x) {
+                                obstacle.x += obstacle.chaseSpeed;
+                            } else {
+                                obstacle.x -= obstacle.chaseSpeed;
+                            }
+                            
+                            if (obstacle.y < this.player.y) {
+                                obstacle.y += obstacle.chaseSpeed;
+                            } else {
+                                obstacle.y -= obstacle.chaseSpeed;
+                            }
+                        } else {
+                            obstacle.chasing = false;
+                            obstacle.chaseSpeed = Math.max(0, obstacle.chaseSpeed - 0.03); // 减速
+                            obstacle.y += this.currentSpeed;
+                        }
+                    } else {
+                        // 其他障碍物统一使用当前速度
+                        obstacle.y += this.currentSpeed;
+                    }
+                    
+                    // 移除超出屏幕的障碍物
+                    if (obstacle.y > this.canvas.height) {
+                        this.obstacles.splice(i, 1);
+                    }
+                }
+            }
+            
+            updateFlowers() {
+                if (this.bloodMoonActive) return;
+                
+                // 所有花朵使用统一速度
+                for (let i = this.flowers.length - 1; i >= 0; i--) {
+                    this.flowers[i].y += this.currentSpeed;
+                    if (this.flowers[i].y > this.canvas.height) {
+                        this.flowers.splice(i, 1);
+                    }
+                }
+            }
+            
+            updateButterflies() {
+                // 所有蝴蝶使用统一速度
+                for (let i = this.butterflies.length - 1; i >= 0; i--) {
+                    this.butterflies[i].y += this.currentSpeed;
+                    if (this.butterflies[i].y > this.canvas.height) {
+                        this.butterflies.splice(i, 1);
+                    }
+                }
+            }
+            
+            checkCollisions() {
+                if (this.player.invincible) return;
+                
+                // 检查与障碍物碰撞
+                for (let i = this.obstacles.length - 1; i >= 0; i--) {
+                    const obstacle = this.obstacles[i];
+                    if (this.isColliding(this.player, obstacle)) {
+                        let damage = 1;
+                        let particleColor = '#8B0000'; // 默认暗红色
+                        
+                        // 根据不同类型造成不同伤害
+                        if (obstacle.type === 'bomb') {
+                            damage = 2;
+                        }
+                        
+                        this.lives = Math.max(0, this.lives - damage);
+                        this.player.invincible = true;
+                        this.player.invincibleTimer = 180; // 3秒无敌 (60fps * 3)
+                        
+                        // 添加碰撞粒子效果（暗红色）
+                        this.createParticles(this.player.x + this.player.width/2, 
+                                           this.player.y + this.player.height/2, 
+                                           particleColor);
+                        
+                        this.obstacles.splice(i, 1);
+                        this.updateUI();
+                        
+                        if (this.lives <= 0) {
+                            this.gameOver();
+                        }
+                        return; // 一次只处理一个碰撞
+                    }
+                }
+                
+                // 检查与花朵碰撞
+                for (let i = this.flowers.length - 1; i >= 0; i--) {
+                    if (this.isColliding(this.player, this.flowers[i])) {
+                        this.score += this.flowerPoints;
+                        this.updateSpeed(); // 检查是否需要提升速度
+                        this.createParticles(this.flowers[i].x + this.flowers[i].width/2, 
+                                           this.flowers[i].y + this.flowers[i].height/2, 
+                                           '#ff6b35');
+                        this.flowers.splice(i, 1);
+                        this.updateUI();
+                    }
+                }
+                
+                // 检查与蝴蝶碰撞
+                for (let i = this.butterflies.length - 1; i >= 0; i--) {
+                    if (this.isColliding(this.player, this.butterflies[i])) {
+                        this.player.boosting = true;
+                        this.player.boostTimer = 180; // 3秒加速
+                        this.createParticles(this.butterflies[i].x + this.butterflies[i].width/2, 
+                                           this.butterflies[i].y + this.butterflies[i].height/2, 
+                                           '#4cd137'); // 绿色
+                        this.butterflies.splice(i, 1);
+                        this.updateUI();
+                    }
+                }
+                
+                // 检查与灯笼碰撞
+                for (let i = this.lanterns.length - 1; i >= 0; i--) {
+                    if (this.isColliding(this.player, this.lanterns[i])) {
+                        this.lives = Math.min(9, this.lives + 1); // 最多9条命
+                        this.createParticles(this.lanterns[i].x + this.lanterns[i].width/2, 
+                                           this.lanterns[i].y + this.lanterns[i].height/2, 
+                                           '#ff0000'); // 鲜红色
+                        this.lanterns.splice(i, 1);
+                        this.updateUI();
+                    }
+                }
+                
+                // 检查与哥布林碰撞
+                for (let i = this.goblins.length - 1; i >= 0; i--) {
+                    if (this.isColliding(this.player, this.goblins[i])) {
+                        this.lives = Math.max(0, this.lives - 1);
+                        this.player.invincible = true;
+                        this.player.invincibleTimer = 180;
+                        this.createParticles(this.goblins[i].x + this.goblins[i].width/2, 
+                                           this.goblins[i].y + this.goblins[i].height/2, 
+                                           '#8B0000'); // 暗红色
+                        this.goblins.splice(i, 1);
+                        this.updateUI();
+                        
+                        if (this.lives <= 0) {
+                            this.gameOver();
+                        }
+                        return;
+                    }
+                }
+            }
+            
+            isColliding(rect1, rect2) {
+                return rect1.x < rect2.x + rect2.width &&
+                       rect1.x + rect1.width > rect2.x &&
+                       rect1.y < rect2.y + rect2.height &&
+                       rect1.y + rect1.height > rect2.y;
+            }
+            
+            createParticles(x, y, color) {
+                for (let i = 0; i < 20; i++) {
+                    this.particles.push({
+                        x: x,
+                        y: y,
+                        vx: (Math.random() - 0.5) * 15,
+                        vy: (Math.random() - 0.5) * 15,
+                        life: 50,
+                        maxLife: 50,
+                        color: color,
+                        size: Math.random() * 6 + 3
+                    });
+                }
+            }
+            
+            updateParticles() {
+                for (let i = this.particles.length - 1; i >= 0; i--) {
+                    const particle = this.particles[i];
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    particle.life--;
+                    
+                    if (particle.life <= 0) {
+                        this.particles.splice(i, 1);
+                    }
+                }
+            }
+            
+            updateTimers() {
+                // 更新无敌计时器
+                if (this.player.invincible) {
+                    this.player.invincibleTimer--;
+                    if (this.player.invincibleTimer <= 0) {
+                        this.player.invincible = false;
+                    }
+                }
+                
+                // 更新加速计时器
+                if (this.player.boosting) {
+                    this.player.boostTimer--;
+                    if (this.player.boostTimer <= 0) {
+                        this.player.boosting = false;
+                    }
+                }
+            }
+            
+            updateUI() {
+                document.getElementById('score').textContent = `得分: ${this.score}`;
+                
+                // 更新生命值显示
+                const hearts = document.querySelectorAll('.heart');
+                hearts.forEach((heart, index) => {
+                    heart.textContent = index < this.lives ? '❤️' : '🤍';
+                });
+                
+                // 更新状态显示
+                const statusElement = document.getElementById('status');
+                if (this.player.invincible) {
+                    statusElement.textContent = '💫 无敌状态';
+                    statusElement.style.color = '#fbc531';
+                } else {
+                    // 只显示阶段信息
+                    const phase = Math.floor(this.score / 50) + 1;
+                    statusElement.textContent = `阶段 ${phase}`;
+                    statusElement.style.color = 'white';
+                }
+            }
+            
+            gameOver() {
+                this.gameRunning = false;
+                this.gameState = 'gameOver';
+                
+                document.getElementById('finalScore').textContent = this.score;
+                document.getElementById('gameOver').style.display = 'block';
+            }
+            
+            drawPlayer() {
+                this.ctx.save();
+                
+                // 无敌状态闪烁效果
+                if (this.player.invincible && Math.floor(Date.now() / 100) % 2) {
+                    this.ctx.globalAlpha = 0.5;
+                }
+                
+                // 绘制青色荧光效果
+                this.ctx.shadowColor = '#00ffff';
+                this.ctx.shadowBlur = 20;
+                
+                // 绘制小猫冲浪板
+                this.ctx.font = '45px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'middle';
+                this.ctx.fillText(this.emojis.board, this.player.x + this.player.width/2, this.player.y + this.player.height/2);
+                
+                this.ctx.restore();
+            }
+            
+            drawObstacles() {
+                this.obstacles.forEach(obstacle => {
+                    this.ctx.save();
+                    this.ctx.font = '35px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    
+                    switch(obstacle.type) {
+                        case 'shark':
+                            this.ctx.fillText(this.emojis.shark, obstacle.x + obstacle.width/2, obstacle.y + obstacle.height/2);
+                            break;
+                        case 'rock':
+                            this.ctx.font = '30px Arial';
+                            this.ctx.fillText(this.emojis.rock, obstacle.x + obstacle.width/2, obstacle.y + obstacle.height/2);
+                            break;
+                        case 'bomb':
+                            this.ctx.fillText(this.emojis.bomb, obstacle.x + obstacle.width/2, obstacle.y + obstacle.height/2);
+                            break;
+                    }
+                    
+                    this.ctx.restore();
+                });
+            }
+            
+            drawFlowers() {
+                if (this.bloodMoonActive) return;
+                
+                this.flowers.forEach(flower => {
+                    this.ctx.save();
+                    this.ctx.font = '25px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.fillText(this.emojis.flower, flower.x + flower.width/2, flower.y + flower.height/2);
+                    this.ctx.restore();
+                });
+            }
+            
+            drawButterflies() {
+                this.butterflies.forEach(butterfly => {
+                    this.ctx.save();
+                    this.ctx.font = '25px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.fillText(this.emojis.butterfly, butterfly.x + butterfly.width/2, butterfly.y + butterfly.height/2);
+                    this.ctx.restore();
+                });
+            }
+            
+            drawMeteors() {
+                this.meteors.forEach(meteor => {
+                    this.ctx.save();
+                    this.ctx.globalAlpha = meteor.landed ? 0.7 : 0.9;
+                    
+                    if (!meteor.landed) {
+                        // 绘制陨石阴影（逐渐增大，尺寸变为4倍）
+                        this.ctx.font = `${meteor.size}px Arial`;
+                        this.ctx.textAlign = 'center';
+                        this.ctx.textBaseline = 'middle';
+                        this.ctx.fillText(this.emojis.meteorShadow, meteor.x + meteor.size/2, meteor.y + meteor.size/2);
+                    } else {
+                        // 绘制落地的陨石坑（半径扩大4倍）
+                        this.ctx.fillStyle = 'rgba(105, 105, 105, 0.7)';
+                        this.ctx.beginPath();
+                        this.ctx.arc(meteor.x + meteor.size/2, this.canvas.height - 20, meteor.impactRadius, 0, Math.PI * 2);
+                        this.ctx.fill();
+                        
+                        // 陨石本身（尺寸变为4倍）
+                        this.ctx.font = '160px Arial';
+                        this.ctx.fillText(this.emojis.meteor, meteor.x + meteor.size/2, this.canvas.height - 20);
+                    }
+                    
+                    this.ctx.restore();
+                });
+            }
+            
+            drawGoblins() {
+                this.goblins.forEach(goblin => {
+                    this.ctx.save();
+                    this.ctx.font = '30px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.fillText(this.emojis.goblin, goblin.x + goblin.width/2, goblin.y + goblin.height/2);
+                    this.ctx.restore();
+                });
+            }
+            
+            drawLanterns() {
+                this.lanterns.forEach(lantern => {
+                    this.ctx.save();
+                    this.ctx.font = '30px Arial';
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    this.ctx.fillText(this.emojis.lantern, lantern.x + lantern.width/2, lantern.y + lantern.height/2);
+                    this.ctx.restore();
+                });
+            }
+            
+            drawParticles() {
+                this.particles.forEach(particle => {
+                    this.ctx.save();
+                    this.ctx.globalAlpha = particle.life / particle.maxLife;
+                    this.ctx.fillStyle = particle.color;
+                    this.ctx.beginPath();
+                    this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
+                    this.ctx.fill();
+                    this.ctx.restore();
+                });
+            }
+            
+            drawWaterEffects() {
+                // 绘制海水
+                const time = Date.now() * 0.003;
+                
+                // 渐变背景色叠加以增强海洋效果
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, this.canvas.height);
+                gradient.addColorStop(0, 'rgba(30, 144, 255, 0.3)');
+                gradient.addColorStop(1, 'rgba(0, 191, 255, 0.1)');
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // 波浪线条
+                this.ctx.strokeStyle = 'rgba(30, 144, 255, 0.7)';
+                this.ctx.lineWidth = 2;
+                
+                // 绘制多层波浪
+                for (let layer = 0; layer < 3; layer++) {
+                    this.ctx.beginPath();
+                    const yOffset = layer * 15;
+                    const amplitude = 8 - layer * 2;
+                    const frequency = 0.02 + layer * 0.01;
+                    const speed = 0.5 + layer * 0.2;
+                    
+                    for (let x = 0; x <= this.canvas.width; x += 5) {
+                        const y = this.canvas.height - 60 + yOffset + Math.sin(x * frequency + time * speed) * amplitude;
+                        if (x === 0) {
+                            this.ctx.moveTo(x, y);
+                        } else {
+                            this.ctx.lineTo(x, y);
+                        }
+                    }
+                    this.ctx.stroke();
+                }
+            }
+            
+            gameLoop() {
+                if (this.gameState === 'playing' && this.gameRunning) {
+                    const currentTime = Date.now();
+                    
+                    // 清空画布
+                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                    
+                    // 更新游戏逻辑
+                    this.handleInput();
+                    this.checkPhaseEvents(); // 检查阶段事件触发
+                    this.spawnObstacles(currentTime);
+                    this.spawnFlowers(currentTime);
+                    this.spawnButterflies(currentTime);
+                    this.updateMeteors();
+                    this.updateGoblins();
+                    this.updateLanterns();
+                    this.updateBloodMoon();
+                    this.updateObstacles();
+                    this.updateFlowers();
+                    this.updateButterflies();
+                    this.checkCollisions();
+                    this.updateParticles();
+                    this.updateTimers();
+                    this.updateBackground();
+                    
+                    // 绘制游戏元素
+                    this.drawWaterEffects();
+                    this.drawObstacles();
+                    this.drawFlowers();
+                    this.drawButterflies();
+                    this.drawMeteors();
+                    this.drawGoblins();
+                    this.drawLanterns();
+                    this.drawParticles();
+                    this.drawPlayer();
+                    
+                    // 更新UI
+                    this.updateUI();
+                }
+                
+                requestAnimationFrame(() => this.gameLoop());
+            }
+        }
+        
+        // 启动游戏
+        window.addEventListener('load', () => {
+            window.game = new SurfingGame();
+        });
+    </script>
+</body>
+</html>
