@@ -621,7 +621,7 @@
             spawnGoblinInvasion() {
                 const formations = ['line', 'L', 'person', 'V'];
                 const formation = formations[Math.floor(Math.random() * formations.length)];
-                const goblinCount = 10; // 数量变为原来的2倍
+                const goblinCount = 10 + (this.currentPhase * 5);
                 
                 for (let i = 0; i < goblinCount; i++) {
                     let x, y;
@@ -643,10 +643,7 @@
                             }
                             break;
                         case 'person':
-                            if (i === 0) {
-                                x = startX; // 头部
-                                y = startY;
-                            } else if (i < 5) {
+                            if (i < 5) {
                                 x = startX - 60 + (i * 30); // 身体
                                 y = startY + 60;
                             } else {
@@ -665,7 +662,7 @@
                         y: y,
                         width: 30,
                         height: 30,
-                        speed: this.currentSpeed * 1.5 // 速度比普通障碍物快1.5倍
+                        speed: this.currentSpeed * 2.5 // 速度比普通障碍物快2.5倍
                     });
                 }
             }
@@ -689,16 +686,15 @@
             
             activateBloodMoon() {
                 this.bloodMoonActive = true;
-                this.bloodMoonTimer = 600; // 10秒 (60fps * 10)
+                this.bloodMoonTimer = 360; // 6秒 (60fps * 6)
                 this.bloodMoonStartTime = this.currentPhase; // 记录开始阶段
                 this.flowers = []; // 清除所有花朵
-                
                 // 在血月期间额外生成大量鲨鱼
                 this.spawnBloodMoonSharks();
             }
             
             spawnBloodMoonSharks() {
-                // 生成5倍数量的鲨鱼（原来是每1.2秒生一个，现在生成20个）
+                // 生成数量的鲨鱼
                 for (let i = 0; i < 30; i++) { // 5倍数
                     setTimeout(() => {
                         if (this.bloodMoonActive) {
@@ -711,10 +707,10 @@
                                 chasing: false,
                                 chaseRange: 120,
                                 chaseSpeed: 0,
-                                maxChaseSpeed: this.currentSpeed * 1.05
+                                maxChaseSpeed: this.currentSpeed * 1.1
                             });
                         }
-                    }, i * 100); // 每隔0.1秒生成一个
+                    }, i * 200); // 每隔0.2秒生成一个
                 }
             }
             
@@ -732,7 +728,7 @@
                         chasing: false,
                         chaseRange: type === 'shark' ? 150 : 0,
                         chaseSpeed: 0,
-                        maxChaseSpeed: this.currentSpeed * 1.05 // 降低到1.05倍
+                        maxChaseSpeed: this.currentSpeed * 1.1 // 降低到1.05倍
                     });
                     
                     this.lastObstacleTime = currentTime;
