@@ -405,7 +405,7 @@
                     audio.addEventListener("ended", playNextSong); // 歌曲结束时继续播放随机的下一首
                     document.removeEventListener("click", handleFirstClick); // 移除监听
                 }
-                document.addEventListener("touchstart", handleFirstClick); // 首次点击播放
+                document.addEventListener("click", handleFirstClick); // 首次点击播放
                 this.restartGame();
             }
             
