@@ -1558,25 +1558,40 @@
             updateCurrentPlayer();
             updateSkillsStatus();
             updateMoveCounter();
-            const audio = document.getElementById("backgroundMusic");
-                audio.volume = 0.3; // 调节音量（0 到 1）
-                audio.play().catch(err => {
-                    console.log("音频播放失败。", err);
-                });
-            // 点击模态框外部关闭
             window.onclick = function(event) {
                 if (event.target === winnerModal) {
                     closeModal();
                 }
             }
+            const audio = document.getElementById("backgroundMusic");
+            const playlist = [
+                "https://raw.githubusercontent.com/Kr1shu01/ME/main/music/longjuanfeng.mp3",
+                "https://raw.githubusercontent.com/Kr1shu01/ME/main/music/qingtian.mp3",
+                "https://raw.githubusercontent.com/Kr1shu01/ME/main/music/tingmamadehua.mp3"
+            ];
+            let isPlaying = false;
+            function playRandomAudio() {
+                if (isPlaying) return;
+                isPlaying = true;
+                function playNext() {
+                    // 随机选一首
+                    const randomIndex = Math.floor(Math.random() * playlist.length);
+                    audio.src = playlist[randomIndex];
+                    audio.volume = 0.3;
+                    audio.play().catch(() => {
+                        alert("自动播放失败，请点页面");
+                    });
+                }
+                // 首次播放
+                playNext();
+                audio.addEventListener("ended", playNext);
+            }
+            document.addEventListener("click", playRandomAudio, { once: true });
         }
         
         // 页面加载完成后初始化
         window.onload = initGame;
     </script>
-    <audio id="backgroundMusic" loop>
-      <source src="https://raw.githubusercontent.com/Kr1shu01/ME/main/music/longjuanfeng.mp3" type="audio/mpeg">
-      您的浏览器不支持音频播放。
-    </audio>
+    <audio id="backgroundMusic" loop></audio>
 </body>
 </html>
