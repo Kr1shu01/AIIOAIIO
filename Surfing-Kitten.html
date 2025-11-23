@@ -387,11 +387,25 @@
                 document.getElementById('gameOver').style.display = 'none';
                 document.getElementById('uiPanel').style.display = 'block';
                 const audio = document.getElementById("backgroundMusic");
-                audio.volume = 0.3; // 调节音量（0 到 1）
-                audio.play().catch(err => {
-                    console.log("音频播放失败。", err);
-                });
-                // 初始化游戏
+                const playlist = [
+                    "https://raw.githubusercontent.com/Kr1shu01/ME/main/music/huahai.mp3",
+                    "https://raw.githubusercontent.com/Kr1shu01/ME/main/music/wenrou.mp3",
+                    "https://raw.githubusercontent.com/Kr1shu01/ME/main/music/chengaiying.mp3"
+                ];
+                function playNextSong() {
+                    const randomIndex = Math.floor(Math.random() * playlist.length);
+                    audio.src = playlist[randomIndex];
+                    audio.volume = 0.3;
+                    audio.play().catch(err => {
+                        console.error("播放失败", err);
+                    });
+                }
+                function handleFirstClick() {
+                    playNextSong(); // 第一次播放随机歌曲
+                    audio.addEventListener("ended", playNextSong); // 歌曲结束时继续播放随机的下一首
+                    document.removeEventListener("click", handleFirstClick); // 移除监听
+                }
+                document.addEventListener("touchstart", handleFirstClick); // 首次点击播放
                 this.restartGame();
             }
             
@@ -1331,9 +1345,6 @@
             window.game = new SurfingGame();
         });
     </script>
-    <audio id="backgroundMusic" loop>
-      <source src="https://raw.githubusercontent.com/Kr1shu01/ME/main/music/huahai.mp3" type="audio/mpeg">
-      你的浏览器不支持音频播放。
-    </audio>
+    <audio id="backgroundMusic" loop></audio>
 </body>
 </html>
