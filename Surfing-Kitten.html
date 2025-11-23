@@ -386,7 +386,11 @@
                 document.getElementById('mainMenu').style.display = 'none';
                 document.getElementById('gameOver').style.display = 'none';
                 document.getElementById('uiPanel').style.display = 'block';
-                
+                const audio = document.getElementById("backgroundMusic");
+                audio.volume = 0.3; // 调节音量（0 到 1）
+                audio.play().catch(err => {
+                    console.log("音频播放失败。", err);
+                });
                 // 初始化游戏
                 this.restartGame();
             }
@@ -1327,5 +1331,9 @@
             window.game = new SurfingGame();
         });
     </script>
+    <audio id="backgroundMusic" loop>
+      <source src="https://raw.githubusercontent.com/Kr1shu01/ME/main/music/qingtian.mp3" type="audio/mpeg">
+      你的浏览器不支持音频播放。
+    </audio>
 </body>
 </html>
