@@ -1627,10 +1627,19 @@
             initializeMaze();
             setupEventListeners();
             updateEpisodeDisplay();
+            const audio = document.getElementById("backgroundMusic");
+                audio.volume = 0.3; // 调节音量（0 到 1）
+                audio.play().catch(err => {
+                    console.log("音频播放失败。", err);
+                });
         }
 
         // 页面加载完成后初始化
         window.onload = init;
     </script>
+    <audio id="backgroundMusic" loop>
+      <source src="https://raw.githubusercontent.com/Kr1shu01/ME/main/music/huahai.mp3" type="audio/mpeg">
+      你的浏览器不支持音频播放。
+    </audio>
 </body>
 </html>
