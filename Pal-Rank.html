@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>抽卡机</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e, #0f3460);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 1400px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 20px;
+            position: relative;
+            z-index: 1000;
+        }
+        
+        h1 {
+            text-align: center;
+            font-size: 3rem;
+            color: #4deeea;
+            text-shadow: 0 0 20px rgba(77, 238, 234, 0.6);
+            font-weight: 800;
+            letter-spacing: 2px;
+            margin: 0;
+            flex: 1;
+        }
+        
+        .main-container {
+            display: flex;
+            max-width: 1400px;
+            width: 100%;
+            gap: 20px;
+            margin-top: 25px;
+        }
+        
+        .left-panel {
+            flex: 7; /* 70%宽度 */
+            background: rgba(10, 15, 30, 0.9);
+            border-radius: 25px;
+            padding: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(100, 150, 255, 0.2);
+        }
+        
+        .right-panel {
+            flex: 3; /* 30%宽度 */
+            background: rgba(10, 15, 30, 0.9);
+            border-radius: 25px;
+            padding: 35px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(100, 150, 255, 0.2);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .ranking-table {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 15px;
+            height: 100%;
+        }
+        
+        .rank-label {
+            font-weight: bold;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            color: #333333 !important;
+            min-width: 100px; /* 增加标签宽度 */
+        }
+        
+        .rank-1 { background: linear-gradient(135deg, #ff4444, #cc0000); }
+        .rank-2 { background: linear-gradient(135deg, #ff8800, #cc6600); }
+        .rank-3 { background: linear-gradient(135deg, #ffbb33, #ffaa00); }
+        .rank-4 { background: linear-gradient(135deg, #ffff66, #ffdd00); }
+        .rank-5 { background: linear-gradient(135deg, #ffffff, #dddddd); }
+        
+        .drop-zone {
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 15px;
+            min-height: 100px;
+            position: relative;
+            transition: all 0.3s ease;
+            padding: 10px;
+        }
+        
+        .drop-zone.drag-over {
+            background: rgba(77, 238, 234, 0.2);
+            border-color: #4deeea;
+        }
+        
+        .placed-images {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            min-height: 80px;
+        }
+        
+        .dropped-image {
+            max-width: 80px;
+            max-height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            cursor: move;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            transition: transform 0.2s;
+        }
+        
+        .dropped-image:hover {
+            transform: scale(1.05);
+        }
+        
+        .content-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 30px;
+        }
+
+        #image-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .fade-container {
+            position: relative;
+            width: 250px; /* 稍微减小图片尺寸以适应更窄的右侧面板 */
+            height: 250px;
+            margin-bottom: 30px;
+        }
+
+        .fade-img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.5s ease-in-out;
+        }
+
+        .fade-img.active {
+            opacity: 1;
+        }
+
+        #pal-name {
+            font-size: 1.8rem; /* 稍微减小字体以适应空间 */
+            color: #4deeea;
+            text-shadow: 0 0 15px rgba(77, 238, 234, 0.7);
+            margin-bottom: 25px;
+            text-align: center;
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            font-size: 1.4rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            width: 220px; /* 减小按钮宽度以适应右侧面板 */
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            position: relative;
+            transition: all 0.3s ease;
+            outline: none;
+            background: linear-gradient(135deg, #2196F3, #0d47a1);
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .btn:hover:not(.btn-disabled):not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.7);
+        }
+
+        .btn:active:not(.btn-disabled):not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .btn-disabled {
+            background: linear-gradient(135deg, #9e9e9e, #616161);
+            color: #bdbdbd;
+            cursor: not-allowed;
+            opacity: 0.7;
+            transform: none !important;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* 抽取动画 */
+        @keyframes drawAnimation {
+            0% { transform: scale(1) rotate(0deg); }
+            25% { transform: scale(1.05) rotate(2deg); }
+            50% { transform: scale(1.1) rotate(-2deg); }
+            75% { transform: scale(1.05) rotate(2deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .draw-result {
+            animation: drawAnimation 0.6s ease-out;
+        }
+
+        /* 进度显示 */
+        .progress-info {
+            margin-top: 20px;
+            font-size: 1.1rem; /* 稍微减小字体 */
+            color: #7fdbff;
+            text-align: center;
+        }
+        
+        /* 拖拽相关样式 */
+        [draggable] {
+            cursor: grab;
+        }
+        
+        [draggable]:active {
+            cursor: grabbing;
+        }
+        
+        .dragging {
+            opacity: 0.5;
+        }
+        
+        /* 清除按钮特殊样式 */
+        .clear-temp-btn {
+            background: linear-gradient(135deg, #ff9800, #f57c00);
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>从夯😼到拉😹   帕鲁扭蛋机</h1>
+</div>
+
+<div class="main-container">
+    <!-- 左侧排名面板 (70%宽度) -->
+    <div class="left-panel">
+        <div class="ranking-table">
+            <div class="rank-label rank-1">夯</div>
+            <div class="drop-zone" data-rank="1" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)">
+                <div class="placed-images"></div>
+            </div>
+            
+            <div class="rank-label rank-2">顶级</div>
+            <div class="drop-zone" data-rank="2" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)">
+                <div class="placed-images"></div>
+            </div>
+            
+            <div class="rank-label rank-3">人上人</div>
+            <div class="drop-zone" data-rank="3" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)">
+                <div class="placed-images"></div>
+            </div>
+            
+            <div class="rank-label rank-4">NPC</div>
+            <div class="drop-zone" data-rank="4" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)">
+                <div class="placed-images"></div>
+            </div>
+            
+            <div class="rank-label rank-5">拉完了</div>
+            <div class="drop-zone" data-rank="5" ondrop="dropHandler(event)" ondragover="dragOverHandler(event)" ondragleave="dragLeaveHandler(event)">
+                <div class="placed-images"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 右侧抽卡面板 (30%宽度) -->
+    <div class="right-panel">
+        <div class="content-center">
+            <div id="image-container">
+                <div class="fade-container">
+                    <img id="pal-image-1" class="fade-img" src="" alt="帕鲁图像">
+                    <img id="pal-image-2" class="fade-img" src="" alt="帕鲁图像">
+                </div>
+                <h2 id="pal-name">点击开始抽取</h2>
+                <div id="progress-info" class="progress-info">已抽取: 0/223 (0%)</div>
+            </div>
+            <button id="draw-button" class="btn" onclick="toggleDraw()">开始抽取</button>
+            <button class="btn clear-temp-btn" onclick="clearTemporary()">清理暂存</button>
+        </div>
+    </div>
+</div>
+
+<script>
+  const pals = [
+    "棉悠悠", "捣蛋猫", "皮皮鸡", "翠叶鼠", "火绒狐", "雪绒狐", 
+    "冲浪鸭", "热浪鸭", "伏特喵", "新叶猿", "燎火鹿", "企丸丸", "闪丸丸",
+    "企丸王", "闪丸王", "电棘鼠", "冰刺鼠", "叶泥泥", "玉藻狐", "啼卡尔",
+    "壶小象", "瞅什魔", "米露菲", "寐魔", "草莽猪", "露娜蒂", "遁地鼠",
+    "勾魂鱿", "蚀魂鱿", "喵斯特", "冰斯特", "鲁米儿", "雷米儿", "猎狼",
+    "炸蛋鸟", "波娜兔", "波霸牛", "荆棘魔仙", "鲨小子", "红小鲨", "吊缚灵",
+    "冰缚灵", "叶胖达", "雷胖达", "棉花糖", "灌木羊", "郁木羊", "美露帕",
+    "紫霞鹿", "祇岳鹿", "疾风隼", "姬小兔", "艾小兔", "炎魔羊", "暗魔羊",
+    "幻悦蝶", "炽焰牛", "趴趴鲇", "梆梆鲇", "黑鸦隐士", "庞克蜥", "热血蜥",
+    "月镰魔", "霜镰魔", "天擒鸟", "羽箭射手", "山岳射手", "铁拳猿", "石掌猿",
+    "骑士蜂", "女皇蜂", "笑魇猫", "毛掸儿", "毛老爹", "疾旋鼬", "桃旋鼬",
+    "雷角马", "吹雪狐", "火麒麟", "邪麒麟", "严冬鹿", "霹雳犬", "苍焰狼",
+    "幽焰狼", "雷鸣童子", "天阴童子", "秘斯媞雅", "花冠龙", "雷冠龙",
+    "滑水蛇", "流沙蛇", "噬魂兽", "碎岩龟", "猫蝠怪", "博爱蜥", "融焰娘",
+    "烽歌龙", "霜歌龙", "浪刃武士", "鬼刃武士", "迅雷鸟", "燧火鸟", "暗巫猫",
+    "炽巫猫", "焰巫狐", "幽巫狐", "踏春兔", "薇莉塔", "绸笠蛾", "精灵龙",
+    "水灵龙", "碧海龙", "碧月龙", "冰棘兽", "金棘兽", "狱焰王", "狱阎王",
+    "佩克龙", "派克龙", "连理龙", "海誓龙", "花丽娜", "熔岩兽", "寒霜兽",
+    "君王美露帕", "冰帝美露帕", "森猛犸", "雪猛犸", "白绒雪怪", "绿苔绒怪",
+    "铠格力斯", "格鲁力斯", "云海鹿", "雷隐鹿", "夜幕魔蝠", "天羽龙", "翠羽龙",
+    "焰煌", "殁殃", "雷冥鸟", "雷鸣鸟", "魔渊龙", "冥铠蝎", "金铠蝎",
+    "阿努比斯", "覆海龙", "腾炎龙", "朱雀", "清雀", "暴电熊", "百合女王",
+    "黑月女王", "荷鲁斯", "伊西斯", "波鲁杰克斯", "异构格里芬", "圣光骑士",
+    "混沌骑士", "唤冬兽", "唤夜兽", "空涡龙", "贝拉诺娃", "贝拉露洁", "辉月伊",
+    "武道蛙", "极道蛙", "春彩娘", "菇咚", "菇波", "球犰", "恐炬灵", "蛊刺妖",
+    "泰锋", "八云犬", "汪宗师", "战冠雀", "旺财", "杰诺贝达", "杰诺路达",
+    "杰诺多兰", "魅爱莉", "夜冥驹", "艾基鲁迦", "墨丸", "净世鹿", "面惧",
+    "幽恋娜", "桃蛛娘", "驭雷马", "霜牙王", "梅莉姆", "妮瞅莎", "金驰兽",
+    "达鼠泥", "冰姬灵", "白真雪雀", "咕咕桑葩", "梁叶龙", "肚肚鳄", "香草豹冰",
+    "盔盔仔", "金盔仔", "海月灵", "海月仙", "墨沫姬", "布偶鲨", "粉粉布偶鲨",
+    "冥灯鱼", "炙灯鱼", "凉晶鲸", "桃晶鲸", "海皇鲸",
+    // 史莱姆系列
+    "绿史莱姆", "蓝史莱姆", "红史莱姆", "紫史莱姆", "夜史莱姆", "彩虹史莱姆",
+    "附魔剑", "洞穴蝙蝠", "光明蝙蝠", "克苏鲁之眼", "恶魔眼"
+  ];
+
+  let fullList = [...pals]; // 完整列表
+  let availableList = [...pals]; // 可抽取列表（去除已抽取的）
+  let currentIndex = 0;
+  let intervalId;
+  let drawing = false;
+  let imgIndex = 0; // 用于双缓冲切换图片
+  let totalPals = pals.length;
+  let draggedElement = null;
+  let currentPalName = ""; // 当前显示的帕鲁名称
+  let placedCount = 0; // 左侧实际放置的图片数量
+  let drawnCount = 0; // 右侧已抽取的帕鲁数量（不重置）
+  let drawnHistory = new Set(); // 已抽取的历史记录
+  
+  function getImageUrl(name) {
+    // 直接使用中文名作为文件名
+    return `images/${encodeURIComponent(name)}.png`;
+  }
+
+  function preloadImage(src) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = () => {
+        console.warn(`图片加载失败: ${src}，使用默认图片`);
+        resolve(); // 即使失败也继续，避免阻塞
+      };
+      img.src = src;
+    });
+  }
+
+  function switchImage(index) {
+    const name = availableList[index];
+    const imageUrl = getImageUrl(name);
+    
+    // 切换图片索引
+    const currentImg = document.getElementById(`pal-image-${imgIndex + 1}`);
+    const nextImgIndex = 1 - imgIndex;
+    const nextImg = document.getElementById(`pal-image-${nextImgIndex + 1}`);
+    
+    // 预加载图片
+    preloadImage(imageUrl).then(() => {
+      // 设置下一张图片
+      nextImg.src = imageUrl;
+      
+      // 淡出当前图片，淡入下一张
+      currentImg.classList.remove('active');
+      setTimeout(() => {
+        nextImg.classList.add('active');
+        imgIndex = nextImgIndex;
+      }, 10);
+    });
+    
+    document.getElementById("pal-name").textContent = name;
+    currentPalName = name; // 保存当前帕鲁名称
+  }
+
+  function updateProgress() {
+    // 显示已抽取的数量和百分比
+    const progressText = `已抽取: ${drawnCount}/${totalPals} (${Math.round(drawnCount/totalPals*100)}%)`;
+    document.getElementById("progress-info").textContent = progressText;
+  }
+
+  function toggleDraw() {
+    const btn = document.getElementById("draw-button");
+
+    if (!drawing) {
+      if (availableList.length === 0) {
+        document.getElementById("pal-name").textContent = "所有帕鲁已被抽取完成！";
+        btn.textContent = "全部抽完";
+        btn.classList.add("btn-disabled");
+        btn.disabled = true;
+        
+        // 隐藏所有图片
+        document.querySelectorAll('.fade-img').forEach(img => {
+          img.classList.remove('active');
+        });
+        return;
+      }
+
+      drawing = true;
+      btn.textContent = "停止抽取";
+      startRolling();
+
+    } else {
+      drawing = false;
+      stopRolling();
+
+      // 应用抽取结果动画
+      document.getElementById(`pal-image-${imgIndex + 1}`).classList.add('draw-result');
+      setTimeout(() => {
+        document.getElementById(`pal-image-${imgIndex + 1}`).classList.remove('draw-result');
+      }, 600);
+
+      // 将当前帕鲁加入已抽取历史
+      if (currentPalName) {
+        drawnHistory.add(currentPalName);
+        drawnCount++; // 增加已抽取计数
+        // 更新可抽取列表（移除已抽取的）
+        availableList = fullList.filter(pal => !drawnHistory.has(pal));
+      }
+      
+      updateProgress(); // 更新进度显示
+      btn.textContent = "再次抽取";
+    }
+  }
+
+  function startRolling() {
+    // 开始时显示第一张图片
+    if (availableList.length > 0) {
+      // 随机选择一个帕鲁
+      const randomIndex = Math.floor(Math.random() * availableList.length);
+      switchImage(randomIndex);
+    }
+    
+    let speed = 80; // 初始速度（毫秒）
+    let acceleration = 1.05; // 加速度
+    let maxSpeed = 200; // 最大延迟时间
+    
+    function roll() {
+      if (!drawing) return;
+      
+      // 随机选择下一个帕鲁（只在未抽取的帕鲁中选择）
+      currentIndex = Math.floor(Math.random() * availableList.length);
+      switchImage(currentIndex);
+      
+      // 逐渐减速效果
+      speed = Math.min(speed * acceleration, maxSpeed);
+      
+      intervalId = setTimeout(roll, speed);
+    }
+    
+    roll();
+  }
+
+  function stopRolling() {
+    clearTimeout(intervalId);
+  }
+
+  // 拖拽相关函数
+  function dragStartHandler(event) {
+    draggedElement = event.target;
+    event.target.classList.add('dragging');
+    
+    // 获取要拖拽的帕鲁名称
+    let palName = "";
+    if (event.target.dataset.name) {
+      palName = event.target.dataset.name;
+    } else if (currentPalName) {
+      palName = currentPalName;
+    } else {
+      palName = document.getElementById("pal-name").textContent;
+    }
+    
+    event.dataTransfer.setData('text/plain', palName);
+    event.dataTransfer.setData('pal-name', palName);
+  }
+
+  function dragEndHandler(event) {
+    event.target.classList.remove('dragging');
+    draggedElement = null;
+  }
+
+  function dragOverHandler(event) {
+    event.preventDefault();
+    event.currentTarget.classList.add('drag-over');
+  }
+
+  function dragLeaveHandler(event) {
+    event.currentTarget.classList.remove('drag-over');
+  }
+
+  function dropHandler(event) {
+    event.preventDefault();
+    event.currentTarget.classList.remove('drag-over');
+    
+    // 获取拖拽的数据
+    const palName = event.dataTransfer.getData('pal-name') || event.dataTransfer.getData('text/plain');
+    
+    if (palName && palName !== "点击开始抽取" && palName !== "点击开始抽取帕鲁") {
+      const imageUrl = getImageUrl(palName);
+      
+      // 创建新的图片元素
+      const newImg = document.createElement('img');
+      newImg.src = imageUrl;
+      newImg.className = 'dropped-image';
+      newImg.alt = palName;
+      newImg.title = palName; // 添加提示信息
+      newImg.draggable = true;
+      newImg.dataset.name = palName;
+      
+      // 添加拖拽事件
+      newImg.addEventListener('dragstart', dragStartHandler);
+      newImg.addEventListener('dragend', dragEndHandler);
+      
+      // 找到放置区域内的图片容器
+      const placedImagesContainer = event.currentTarget.querySelector('.placed-images');
+      
+      // 添加新图片到容器
+      placedImagesContainer.appendChild(newImg);
+      
+      // 增加已放置计数（这个会在清理暂存时重置）
+      placedCount++;
+      
+      draggedElement = null;
+    }
+  }
+
+  // 清理暂存 - 只清除左侧放置的图片，保留抽取进度
+  function clearTemporary() {
+    const placedImagesContainers = document.querySelectorAll('.placed-images');
+    placedImagesContainers.forEach(container => {
+      container.innerHTML = '';
+    });
+    // 重置左侧放置计数，但保留右侧抽取进度
+    placedCount = 0;
+    // 进度显示仍然显示已抽取的数量，不需要更新
+  }
+
+  // 初始化
+  window.addEventListener("DOMContentLoaded", () => {
+    document.getElementById("pal-name").textContent = "点击开始抽取帕鲁";
+    updateProgress();
+    
+    // 为右侧图片添加拖拽功能
+    const fadeImages = document.querySelectorAll('.fade-img');
+    fadeImages.forEach(img => {
+      img.setAttribute('draggable', 'true');
+      img.addEventListener('dragstart', dragStartHandler);
+      img.addEventListener('dragend', dragEndHandler);
+    });
+  });
+</script>
+
+</body>
+</html>
