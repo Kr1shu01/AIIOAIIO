@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw, ImageFont
 import os
 
 # 创建images文件夹
-os.makedirs('images', exist_ok=True)
+os.makedirs('images/Pal', exist_ok=True)
 
 # 帕鲁名称列表（您可以根据需要扩展）
 pals = [
@@ -94,7 +94,7 @@ for i, pal_name in enumerate(pals):
         break
         
     filename = f"{pal_name}.png"
-    filepath = os.path.join('images', filename)
+    filepath = os.path.join('images', 'Pal', filename)
     
     # 创建并保存图片
     img = create_test_image(pal_name)
@@ -112,11 +112,11 @@ if generated_count < 223:
         # 循环使用现有名称
         pal_name = pals[i % len(pals)]
         filename = f"{pal_name}_{(i//len(pals))+2}.png"  # 添加后缀避免重复
-        filepath = os.path.join('images', filename)
+        filepath = os.path.join('images', 'Pal', filename)
         
         img = create_test_image(f"{pal_name}")
         img.save(filepath)
         print(f"已生成: {filename}")
         generated_count += 1
 
-print(f"\n完成！总共生成了 {generated_count} 张测试图片在 'images' 文件夹中")
+print(f"\n完成！总共生成了 {generated_count} 张测试图片在 'images/Pal' 文件夹中")
